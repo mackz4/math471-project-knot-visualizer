@@ -26,7 +26,7 @@ AutoBuild_init()
 
 #---------------------- Source for this Project ----------------------
 
-project(basicgraphics-example)
+project(caustics)
 
 message(STATUS "==== BUILDING ${PROJECT_NAME}")
 message(STATUS "Using install prefix: ${CMAKE_INSTALL_PREFIX}")
@@ -35,11 +35,11 @@ message(STATUS "Using install prefix: ${CMAKE_INSTALL_PREFIX}")
 
 set(source_files
   src/main.cpp
-  src/ExampleApp.cpp
+  src/App.cpp
 )
 
 set(header_files
-  src/ExampleApp.h
+  src/App.h
 )
 
 set(extra_files
