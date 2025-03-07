@@ -118,63 +118,63 @@ void App::onRenderGraphicsContext(const VRGraphicsState &renderState) {
     std::vector<std::shared_ptr<Texture>> textures;
     
     // Create the vertices
-//    int counter = 0;
-//    for (int z = -_ENV_WIDTH/2; z < _ENV_WIDTH/2; z += _TILE_WIDTH*2) {
-//        for (int x = -_ENV_WIDTH/2; x < _ENV_WIDTH/2; x += _TILE_WIDTH) {
-//            float y_coord = _ENV_WIDTH;  // The y-coordinate is constant (for now)
-//            
-//            Mesh::Vertex vert1;
-//            vert1.position = vec3(x, y_coord, z);
-//            vert1.normal = vec3(0, 1, 0);
-//            vert1.texCoord0 = vec2(0, 0);
-//            cpuVertexArray.push_back(vert1);
-//            cpuIndexArray.push_back(counter);
-//            counter++;
-//            
-//            Mesh::Vertex vert2;
-//            vert2.position = vec3(x, y_coord, z + _TILE_WIDTH);
-//            vert2.normal = vec3(0, 1, 0);
-//            vert2.texCoord0 = vec2(0, 0);
-//            cpuVertexArray.push_back(vert2);
-//            cpuIndexArray.push_back(counter);
-//            counter++;
-//        }
-//    }
+    int counter = 0;
+    for (int y = -_ENV_WIDTH/2; y < _ENV_WIDTH/2; y += _TILE_WIDTH) {
+        for (int x = -_ENV_WIDTH/2; x < _ENV_WIDTH/2; x += _TILE_WIDTH) {
+            float z_coord = _ENV_WIDTH;  // The y-coordinate is constant (for now)
+
+            Mesh::Vertex vert1;
+            vert1.position = vec3(x, y, z_coord);
+            vert1.normal = vec3(0, 1, 0);
+            vert1.texCoord0 = vec2(0, 0);
+            cpuVertexArray.push_back(vert1);
+            cpuIndexArray.push_back(counter);
+            counter++;
+            
+            Mesh::Vertex vert2;
+            vert2.position = vec3(x, y + _TILE_WIDTH, z_coord);
+            vert2.normal = vec3(0, 1, 0);
+            vert2.texCoord0 = vec2(0, 0);
+            cpuVertexArray.push_back(vert2);
+            cpuIndexArray.push_back(counter);
+            counter++;
+        }
+    }
     
-    Mesh::Vertex vert1;
-    vert1.position = vec3(-5, 100, 5);
-    vert1.normal = vec3(0, 1, 0);
-    vert1.texCoord0 = vec2(0, 0);
-    cpuVertexArray.push_back(vert1);
-    cpuIndexArray.push_back(0);
-    
-    Mesh::Vertex vert2;
-    vert2.position = vec3(-5, 100, -5);
-    vert2.normal = vec3(0, 1, 0);
-    vert2.texCoord0 = vec2(0, 0);
-    cpuVertexArray.push_back(vert2);
-    cpuIndexArray.push_back(1);
-    
-    Mesh::Vertex vert3;
-    vert3.position = vec3(5, 100, 5);
-    vert3.normal = vec3(0, 1, 0);
-    vert3.texCoord0 = vec2(0, 0);
-    cpuVertexArray.push_back(vert3);
-    cpuIndexArray.push_back(2);
-    
-    Mesh::Vertex vert4;
-    vert4.position = vec3(5, 100, -5);
-    vert4.normal = vec3(0, 1, 0);
-    vert4.texCoord0 = vec2(0, 0);
-    cpuVertexArray.push_back(vert4);
-    cpuIndexArray.push_back(3);
+//    Mesh::Vertex vert1;
+//    vert1.position = vec3(-5, 5, 100);
+//    vert1.normal = vec3(0, 0, 1);
+//    vert1.texCoord0 = vec2(0, 0);
+//    cpuVertexArray.push_back(vert1);
+//    cpuIndexArray.push_back(0);
+//    
+//    Mesh::Vertex vert2;
+//    vert2.position = vec3(-5, -5, 100);
+//    vert2.normal = vec3(0, 0, 1);
+//    vert2.texCoord0 = vec2(0, 0);
+//    cpuVertexArray.push_back(vert2);
+//    cpuIndexArray.push_back(1);
+//    
+//    Mesh::Vertex vert3;
+//    vert3.position = vec3(5, 5, 100);
+//    vert3.normal = vec3(0, 0, 1);
+//    vert3.texCoord0 = vec2(0, 0);
+//    cpuVertexArray.push_back(vert3);
+//    cpuIndexArray.push_back(2);
+//    
+//    Mesh::Vertex vert4;
+//    vert4.position = vec3(5, -5, 100);
+//    vert4.normal = vec3(0, 0, 1);
+//    vert4.texCoord0 = vec2(0, 0);
+//    cpuVertexArray.push_back(vert4);
+//    cpuIndexArray.push_back(3);
     
     // Set the Water mesh
     const int numVertices = cpuVertexArray.size();
     const int cpuVertexByteSize = sizeof(Mesh::Vertex) * numVertices;
     const int cpuIndexByteSize = sizeof(int) * cpuIndexArray.size();
     
-    _waterMesh.reset(new Mesh(textures, GL_TRIANGLE_STRIP, GL_STATIC_DRAW, cpuVertexByteSize, cpuIndexByteSize, 0, cpuVertexArray, cpuIndexArray.size(), cpuIndexByteSize, &cpuIndexArray[0]));
+    _waterMesh.reset(new Mesh(textures, GL_TRIANGLE_STRIP, GL_DYNAMIC_DRAW, cpuVertexByteSize, cpuIndexByteSize, 0, cpuVertexArray, cpuIndexArray.size(), cpuIndexByteSize, &cpuIndexArray[0]));
     
     _waterMesh->setMaterialColor(vec4(1));
 }
@@ -188,7 +188,7 @@ void App::onRenderGraphicsScene(const VRGraphicsState &renderState) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 	// Setup the view matrix to set where the camera is located in the scene
-	glm::vec3 eye_world = glm::vec3(0, 110, 0);
+	glm::vec3 eye_world = glm::vec3(0, 0, 200);
 	glm::mat4 view = glm::lookAt(eye_world, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
 	// When we use virtual reality, this will be replaced by:
 	// eye_world = glm::make_vec3(renderState.getCameraPos())
