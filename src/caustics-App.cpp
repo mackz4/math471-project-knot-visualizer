@@ -10,7 +10,6 @@
 App::App(int argc, char** argv) : VRApp(argc, argv)
 {
 	_lastTime = 0.0;
-	_angle = 0;
 
 }
 
@@ -109,14 +108,75 @@ void App::onRenderGraphicsContext(const VRGraphicsState &renderState) {
 		// This load shaders from disk, we do it once when the program starts up.
 		reloadShaders();
 
-		// Make our model objects
-		_box.reset(new Box(vec3(-0.5, -0.5, -0.5), vec3(0.5, 0.5, 0.5), vec4(1.0, 0.0, 0.0, 1.0)));
-
 		initializeText();
     }
-
-	// Update the angle every frame:
-	_angle += glm::radians(1.0);
+    
+    // Update Water Mesh
+    //TODO: Initialize the _mesh variable with a triangle mesh uploaded to the GPU.
+    std::vector<Mesh::Vertex> cpuVertexArray;  // VBO
+    std::vector<int> cpuIndexArray;  // Index list
+    std::vector<std::shared_ptr<Texture>> textures;
+    
+    // Create the vertices
+//    int counter = 0;
+//    for (int z = -_ENV_WIDTH/2; z < _ENV_WIDTH/2; z += _TILE_WIDTH*2) {
+//        for (int x = -_ENV_WIDTH/2; x < _ENV_WIDTH/2; x += _TILE_WIDTH) {
+//            float y_coord = _ENV_WIDTH;  // The y-coordinate is constant (for now)
+//            
+//            Mesh::Vertex vert1;
+//            vert1.position = vec3(x, y_coord, z);
+//            vert1.normal = vec3(0, 1, 0);
+//            vert1.texCoord0 = vec2(0, 0);
+//            cpuVertexArray.push_back(vert1);
+//            cpuIndexArray.push_back(counter);
+//            counter++;
+//            
+//            Mesh::Vertex vert2;
+//            vert2.position = vec3(x, y_coord, z + _TILE_WIDTH);
+//            vert2.normal = vec3(0, 1, 0);
+//            vert2.texCoord0 = vec2(0, 0);
+//            cpuVertexArray.push_back(vert2);
+//            cpuIndexArray.push_back(counter);
+//            counter++;
+//        }
+//    }
+    
+    Mesh::Vertex vert1;
+    vert1.position = vec3(-5, 100, 5);
+    vert1.normal = vec3(0, 1, 0);
+    vert1.texCoord0 = vec2(0, 0);
+    cpuVertexArray.push_back(vert1);
+    cpuIndexArray.push_back(0);
+    
+    Mesh::Vertex vert2;
+    vert2.position = vec3(-5, 100, -5);
+    vert2.normal = vec3(0, 1, 0);
+    vert2.texCoord0 = vec2(0, 0);
+    cpuVertexArray.push_back(vert2);
+    cpuIndexArray.push_back(1);
+    
+    Mesh::Vertex vert3;
+    vert3.position = vec3(5, 100, 5);
+    vert3.normal = vec3(0, 1, 0);
+    vert3.texCoord0 = vec2(0, 0);
+    cpuVertexArray.push_back(vert3);
+    cpuIndexArray.push_back(2);
+    
+    Mesh::Vertex vert4;
+    vert4.position = vec3(5, 100, -5);
+    vert4.normal = vec3(0, 1, 0);
+    vert4.texCoord0 = vec2(0, 0);
+    cpuVertexArray.push_back(vert4);
+    cpuIndexArray.push_back(3);
+    
+    // Set the Water mesh
+    const int numVertices = cpuVertexArray.size();
+    const int cpuVertexByteSize = sizeof(Mesh::Vertex) * numVertices;
+    const int cpuIndexByteSize = sizeof(int) * cpuIndexArray.size();
+    
+    _waterMesh.reset(new Mesh(textures, GL_TRIANGLE_STRIP, GL_STATIC_DRAW, cpuVertexByteSize, cpuIndexByteSize, 0, cpuVertexArray, cpuIndexArray.size(), cpuIndexByteSize, &cpuIndexArray[0]));
+    
+    _waterMesh->setMaterialColor(vec4(1));
 }
 
 
@@ -128,7 +188,7 @@ void App::onRenderGraphicsScene(const VRGraphicsState &renderState) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 	// Setup the view matrix to set where the camera is located in the scene
-	glm::vec3 eye_world = glm::vec3(0, 0, 5);
+	glm::vec3 eye_world = glm::vec3(0, 110, 0);
 	glm::mat4 view = glm::lookAt(eye_world, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
 	// When we use virtual reality, this will be replaced by:
 	// eye_world = glm::make_vec3(renderState.getCameraPos())
@@ -141,11 +201,7 @@ void App::onRenderGraphicsScene(const VRGraphicsState &renderState) {
 	// When we use virtual reality, this will be replaced by:
 	// projection = glm::make_mat4(renderState.getProjectionMatrix())
 	
-	// Setup the model matrix
-	glm::mat4 model = glm::mat4(1.0);
-
-	glm::mat4 rotate = glm::toMat4(glm::angleAxis(_angle, vec3(0, 1, 0))) * glm::toMat4(glm::angleAxis(glm::radians(20.0f), vec3(1.0, 0.0, 0.0)));
-	model = rotate * model;
+	
     
 	// Tell opengl we want to use this specific shader.
 	_shader.use();
@@ -153,17 +209,16 @@ void App::onRenderGraphicsScene(const VRGraphicsState &renderState) {
 	_shader.setUniform("view_mat", view);
 	_shader.setUniform("projection_mat", projection);
 	
-	_shader.setUniform("model_mat", model);
-	_shader.setUniform("normal_mat", mat3(transpose(inverse(model))));
+	_shader.setUniform("model_mat", mat4(1.0));
+	_shader.setUniform("normal_mat", mat3(transpose(inverse(mat4(1.0)))));
 	_shader.setUniform("eye_world", eye_world);
-
-
-	_box->draw(_shader, model);
 
 	
 	double deltaTime = _curFrameTime - _lastTime;
 	std::string fps = "FPS: " + std::to_string(1.0/deltaTime);
 	drawText(fps, 10, 10, windowHeight, windowWidth);
+    
+    _waterMesh->draw(_shader);
 }
 
 void App::drawText(const std::string text, float xPos, float yPos, GLfloat windowHeight, GLfloat windowWidth) {

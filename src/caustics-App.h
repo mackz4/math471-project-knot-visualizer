@@ -55,9 +55,11 @@ public:
     
     
 private:
+    
+    const int _ENV_WIDTH = 100;
+    const int _TILE_WIDTH = 1;
 
-	std::unique_ptr<Box> _box;
-	float _angle;
+    std::unique_ptr<basicgraphics::Mesh> _waterMesh;
 
 	double _lastTime;
 	double _curFrameTime;
