@@ -10,6 +10,15 @@
 App::App(int argc, char** argv) : VRApp(argc, argv)
 {
 	_lastTime = 0.0;
+	_curFrameTime = 0.0;
+
+	currTheta = glm::radians(0.0);
+	currPhi = glm::radians(0.0);
+	eye_world = angleToSpherePoint(currTheta, currPhi);
+
+	up_vector = vec3(0, 0, 1);
+
+	mouseDown = false;
 
 }
 
@@ -46,6 +55,10 @@ void App::onButtonDown(const VRButtonEvent &event) {
 	*/
 
 	//std::cout << "ButtonDown: " << event.getName() << std::endl;
+	string name = event.getName();
+	if (name == "MouseBtnLeft_Down") {
+		mouseDown = true;
+	}
 
 }
 
@@ -54,6 +67,9 @@ void App::onButtonUp(const VRButtonEvent &event) {
     // to see exactly which button has been released.
 
 	//std::cout << "ButtonUp: " << event.getName() << std::endl;
+	if (event.getName() == "MouseBtnLeft_Up") {
+		mouseDown = false;
+	}
 }
 
 void App::onCursorMove(const VRCursorEvent &event) {
@@ -61,6 +77,21 @@ void App::onCursorMove(const VRCursorEvent &event) {
 	// or the relative position within the window scaled 0--1.
 	
 	//std::cout << "MouseMove: "<< event.getName() << " " << event.getPos()[0] << " " << event.getPos()[1] << std::endl;
+	if (mouseDown) {
+		vec2 dxy = vec2(event.getPos()[0], event.getPos()[1]) - lastMousePos;
+
+		float theta = glm::atan(dxy.x / 10.0f, _CAMERA_RADIUS);
+		float phi = glm::atan(dxy.y / 10.0f, _CAMERA_RADIUS);
+		currTheta += theta;
+		currPhi += phi;
+
+		eye_world = angleToSpherePoint(currTheta, currPhi);
+		mat4 rotationX = glm::rotate(mat4(1.0), theta, vec3(0.0, 1.0, 0.0));
+		mat4 rotationY = glm::rotate(mat4(1.0), phi, vec3(1.0, 0.0, 0.0));
+		up_vector = rotationY * rotationX * vec4(up_vector, 0.0);
+		
+	}
+	lastMousePos = vec2(event.getPos()[0], event.getPos()[1]);
 }
 
 void App::onTrackerMove(const VRTrackerEvent &event) {
@@ -111,73 +142,9 @@ void App::onRenderGraphicsContext(const VRGraphicsState &renderState) {
 		initializeText();
     }
     
-    // Update Water Mesh
-    //TODO: Initialize the _mesh variable with a triangle mesh uploaded to the GPU.
-    std::vector<Mesh::Vertex> cpuVertexArray;  // VBO
-    std::vector<int> cpuIndexArray;  // Index list
-    std::vector<std::shared_ptr<Texture>> textures;
-    
-    // Create the vertices
-    int counter = 0;
-    for (int z = -_ENV_WIDTH/2; z < _ENV_WIDTH/2; z += _TILE_WIDTH) {
-        for (int x = -_ENV_WIDTH/2; x < _ENV_WIDTH/2; x += _TILE_WIDTH) {
-            float y_coord = _ENV_WIDTH;  // The y-coordinate is constant (for now)
-
-            Mesh::Vertex vert1;
-            vert1.position = vec3(x, y_coord, z);
-            vert1.normal = vec3(0, 1, 0);
-            vert1.texCoord0 = vec2(0, 0);
-            cpuVertexArray.push_back(vert1);
-            cpuIndexArray.push_back(counter);
-            counter++;
-            
-            Mesh::Vertex vert2;
-            vert2.position = vec3(x, y_coord, z + _TILE_WIDTH);
-            vert2.normal = vec3(0, 1, 0);
-            vert2.texCoord0 = vec2(0, 0);
-            cpuVertexArray.push_back(vert2);
-            cpuIndexArray.push_back(counter);
-            counter++;
-        }
-    }
-	
-    
-//    Mesh::Vertex vert1;
-//    vert1.position = vec3(-5, 5, 100);
-//    vert1.normal = vec3(0, 0, 1);
-//    vert1.texCoord0 = vec2(0, 0);
-//    cpuVertexArray.push_back(vert1);
-//    cpuIndexArray.push_back(0);
-//    
-//    Mesh::Vertex vert2;
-//    vert2.position = vec3(-5, -5, 100);
-//    vert2.normal = vec3(0, 0, 1);
-//    vert2.texCoord0 = vec2(0, 0);
-//    cpuVertexArray.push_back(vert2);
-//    cpuIndexArray.push_back(1);
-//    
-//    Mesh::Vertex vert3;
-//    vert3.position = vec3(5, 5, 100);
-//    vert3.normal = vec3(0, 0, 1);
-//    vert3.texCoord0 = vec2(0, 0);
-//    cpuVertexArray.push_back(vert3);
-//    cpuIndexArray.push_back(2);
-//    
-//    Mesh::Vertex vert4;
-//    vert4.position = vec3(5, -5, 100);
-//    vert4.normal = vec3(0, 0, 1);
-//    vert4.texCoord0 = vec2(0, 0);
-//    cpuVertexArray.push_back(vert4);
-//    cpuIndexArray.push_back(3);
-    
-    // Set the Water mesh
-    const int numVertices = cpuVertexArray.size();
-    const int cpuVertexByteSize = sizeof(Mesh::Vertex) * numVertices;
-    const int cpuIndexByteSize = sizeof(int) * cpuIndexArray.size();
-    
-    _waterMesh.reset(new Mesh(textures, GL_TRIANGLE_STRIP, GL_DYNAMIC_DRAW, cpuVertexByteSize, cpuIndexByteSize, 0, cpuVertexArray, cpuIndexArray.size(), cpuIndexByteSize, &cpuIndexArray[0]));
-    
-    _waterMesh->setMaterialColor(vec4(0.0, 0.0, 1.0, 1.0));
+	initWaterMesh();
+	//initWallsMesh();
+	//initFloorMesh();
 }
 
 
@@ -189,8 +156,8 @@ void App::onRenderGraphicsScene(const VRGraphicsState &renderState) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 	// Setup the view matrix to set where the camera is located in the scene
-	glm::vec3 eye_world = glm::vec3(0, 30, 0);
-	glm::mat4 view = glm::lookAt(eye_world, glm::vec3(0, 0, 0), glm::vec3(0, 0, 1));
+	//glm::vec3 eye_world = glm::vec3(0, 30, 0);
+	glm::mat4 view = glm::lookAt(eye_world, glm::vec3(0, 0, 0), up_vector);
 	// When we use virtual reality, this will be replaced by:
 	// eye_world = glm::make_vec3(renderState.getCameraPos())
 	// view = glm::make_mat4(renderState.getViewMatrix());
@@ -280,4 +247,79 @@ void App::initializeText() {
 	_textShader.compileShader("textRendering.vert", GLSLShader::VERTEX);
 	_textShader.compileShader("textRendering.frag", GLSLShader::FRAGMENT);
 	_textShader.link();
+}
+
+vec3 App::angleToSpherePoint(float theta, float phi) {
+	float x = _CAMERA_RADIUS * sin(phi) * sin(theta);
+	float y = _CAMERA_RADIUS * cos(phi);
+	float z = _CAMERA_RADIUS * sin(phi) * cos(theta);
+	//std::cout << theta << " " << phi << std::endl;
+	//
+	//std::cout << x << " " << y << " " << z << std::endl;
+	return vec3(x, y, z);
+}
+
+void App::initWaterMesh() {
+	// Update Water Mesh
+	std::vector<Mesh::Vertex> cpuVertexArray;  // VBO
+	std::vector<int> cpuIndexArray;  // Index list
+	std::vector<std::shared_ptr<Texture>> textures;
+
+	// Create the vertices
+	int counter = 0;
+	for (float z = -_ENV_SIZE / 2; z < _ENV_SIZE / 2; z += _TILE_SIZE) {
+		for (float x = -_ENV_SIZE / 2; x < _ENV_SIZE / 2; x += _TILE_SIZE) {
+			float amplitude = 1.0f;
+			float timeDis = _curFrameTime;
+			float y_coord1 = amplitude * glm::sin(z + timeDis) + _ENV_SIZE;  // The y-coordinate is constant (for now)
+			float y_coord2 = amplitude * glm::sin(z + _TILE_SIZE + timeDis) + _ENV_SIZE;
+
+			Mesh::Vertex vert1;  // Top left
+			vert1.position = vec3(x, y_coord1, z);
+			vert1.normal = normalize(vec3(0, 1, amplitude * glm::cos(z)));
+			vert1.texCoord0 = vec2(0, 0);
+			cpuVertexArray.push_back(vert1);
+			cpuIndexArray.push_back(counter);
+			counter++;
+
+			
+
+			Mesh::Vertex vert2;  // Bottom left
+			vert2.position = vec3(x, y_coord2, z + _TILE_SIZE);
+			vert2.normal = normalize(vec3(0, 1, amplitude * glm::cos(z + _TILE_SIZE)));
+			vert2.texCoord0 = vec2(0, 0);
+			cpuVertexArray.push_back(vert2);
+			cpuIndexArray.push_back(counter);
+			counter++;
+
+			Mesh::Vertex vert3;  // Top Right
+			vert3.position = vec3(x + _TILE_SIZE, y_coord1, z );
+			vert3.normal = normalize(vec3(0, 1, amplitude * glm::cos(z)));
+			vert3.texCoord0 = vec2(0, 0);
+			cpuVertexArray.push_back(vert3);
+			cpuIndexArray.push_back(counter);
+			cpuIndexArray.push_back(counter);  // Dupe
+			counter++;
+
+			cpuIndexArray.push_back(counter - 2); // Dupe the previous vertex
+
+			Mesh::Vertex vert4;  // Bottom left
+			vert4.position = vec3(x + _TILE_SIZE, y_coord2, z + _TILE_SIZE);
+			vert4.normal = normalize(vec3(0, 1, amplitude * glm::cos(z + _TILE_SIZE)));
+			vert4.texCoord0 = vec2(0, 0);
+			cpuVertexArray.push_back(vert4);
+			cpuIndexArray.push_back(counter);
+			counter++;
+		}
+	}
+
+	// Set the Water mesh
+	const int numVertices = cpuVertexArray.size();
+	const int cpuVertexByteSize = sizeof(Mesh::Vertex) * numVertices;
+	const int cpuIndexByteSize = sizeof(int) * cpuIndexArray.size();
+
+	_waterMesh.reset(new Mesh(textures, GL_TRIANGLES , GL_DYNAMIC_DRAW, cpuVertexByteSize, cpuIndexByteSize, 0, cpuVertexArray, cpuIndexArray.size(), cpuIndexByteSize, &cpuIndexArray[0]));
+
+	_waterMesh->setMaterialColor(vec4(0.0, 0.0, 1.0, 1.0));
+
 }

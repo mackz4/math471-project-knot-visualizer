@@ -56,13 +56,27 @@ public:
     
 private:
     
-    const int _ENV_WIDTH = 10;
-    const int _TILE_WIDTH = 1;
+    const float _ENV_SIZE = 10.0; // orig _ENV_WIDTH
+    const float _TILE_SIZE = 0.5f; // orig _TILE_WIDTH
+
+    const float _CAMERA_RADIUS = 30.0f;
 
     std::unique_ptr<basicgraphics::Mesh> _waterMesh;
+    std::unique_ptr<basicgraphics::Mesh> _wallsMesh;
+    std::unique_ptr<basicgraphics::Mesh> _floorMesh;
 
 	double _lastTime;
 	double _curFrameTime;
+
+    bool mouseDown; // Signifies whether the left mouse button is currently held down.
+    float currTheta;
+    float currPhi;
+    vec3 angleToSpherePoint(float theta, float phi);
+    void initWaterMesh();
+
+    glm::vec2 lastMousePos;
+    glm::vec3 eye_world;
+    glm::vec3 up_vector;
 
 	virtual void reloadShaders();
 	GLSLProgram _shader;
