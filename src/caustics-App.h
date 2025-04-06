@@ -1,5 +1,5 @@
-#ifndef CAUSTICS-APP_H
-#define CAUSTICS-APP_H
+#ifndef CAUSTICS_APP_H // Changed from CAUSTICS-APP_H
+#define CAUSTICS_APP_H // Changed from CAUSTICS-APP_H
 
 #include <api/MinVR.h>
 using namespace MinVR;
@@ -56,7 +56,7 @@ public:
     
 private:
     
-    const int _ENV_WIDTH = 100;
+    const int _ENV_WIDTH = 10;
     const int _TILE_WIDTH = 1;
 
     std::unique_ptr<basicgraphics::Mesh> _waterMesh;
