@@ -265,6 +265,7 @@ void App::initWaterMesh(string waveType) {
 	std::vector<int> cpuIndexArray;  // Index list
 	std::vector<std::shared_ptr<Texture>> textures;
     
+    // TODO: add switch statement to choose a water function based on waveType
     simpleZWater(&cpuVertexArray, &cpuIndexArray);
 
 	// Set the Water mesh
