@@ -142,7 +142,7 @@ void App::onRenderGraphicsContext(const VRGraphicsState &renderState) {
 		initializeText();
     }
     
-	initWaterMesh();
+	initWaterMesh("SimpleZ");
 	//initWallsMesh();
 	//initFloorMesh();
 }
@@ -259,59 +259,13 @@ vec3 App::angleToSpherePoint(float theta, float phi) {
 	return vec3(x, y, z);
 }
 
-void App::initWaterMesh() {
+void App::initWaterMesh(string waveType) {
 	// Update Water Mesh
 	std::vector<Mesh::Vertex> cpuVertexArray;  // VBO
 	std::vector<int> cpuIndexArray;  // Index list
 	std::vector<std::shared_ptr<Texture>> textures;
-
-	// Create the vertices
-	int counter = 0;
-	for (float z = -_ENV_SIZE / 2; z < _ENV_SIZE / 2; z += _TILE_SIZE) {
-		for (float x = -_ENV_SIZE / 2; x < _ENV_SIZE / 2; x += _TILE_SIZE) {
-			float amplitude = 1.0f;
-			float timeDis = _curFrameTime;
-			float y_coord1 = amplitude * glm::sin(z + timeDis) + _ENV_SIZE;  // The y-coordinate is constant (for now)
-			float y_coord2 = amplitude * glm::sin(z + _TILE_SIZE + timeDis) + _ENV_SIZE;
-
-			Mesh::Vertex vert1;  // Top left
-			vert1.position = vec3(x, y_coord1, z);
-			vert1.normal = normalize(vec3(0, 1, amplitude * glm::cos(z)));
-			vert1.texCoord0 = vec2(0, 0);
-			cpuVertexArray.push_back(vert1);
-			cpuIndexArray.push_back(counter);
-			counter++;
-
-			
-
-			Mesh::Vertex vert2;  // Bottom left
-			vert2.position = vec3(x, y_coord2, z + _TILE_SIZE);
-			vert2.normal = normalize(vec3(0, 1, amplitude * glm::cos(z + _TILE_SIZE)));
-			vert2.texCoord0 = vec2(0, 0);
-			cpuVertexArray.push_back(vert2);
-			cpuIndexArray.push_back(counter);
-			counter++;
-
-			Mesh::Vertex vert3;  // Top Right
-			vert3.position = vec3(x + _TILE_SIZE, y_coord1, z );
-			vert3.normal = normalize(vec3(0, 1, amplitude * glm::cos(z)));
-			vert3.texCoord0 = vec2(0, 0);
-			cpuVertexArray.push_back(vert3);
-			cpuIndexArray.push_back(counter);
-			cpuIndexArray.push_back(counter);  // Dupe
-			counter++;
-
-			cpuIndexArray.push_back(counter - 2); // Dupe the previous vertex
-
-			Mesh::Vertex vert4;  // Bottom left
-			vert4.position = vec3(x + _TILE_SIZE, y_coord2, z + _TILE_SIZE);
-			vert4.normal = normalize(vec3(0, 1, amplitude * glm::cos(z + _TILE_SIZE)));
-			vert4.texCoord0 = vec2(0, 0);
-			cpuVertexArray.push_back(vert4);
-			cpuIndexArray.push_back(counter);
-			counter++;
-		}
-	}
+    
+    simpleZWater(&cpuVertexArray, &cpuIndexArray);
 
 	// Set the Water mesh
 	const int numVertices = cpuVertexArray.size();
@@ -322,4 +276,54 @@ void App::initWaterMesh() {
 
 	_waterMesh->setMaterialColor(vec4(0.0, 0.0, 1.0, 1.0));
 
+}
+
+void App::simpleZWater(std::vector<Mesh::Vertex> *cpuVertexArray, std::vector<int> *cpuIndexArray) {
+    // Create the vertices
+    int counter = 0;
+    for (float z = -_ENV_SIZE / 2; z < _ENV_SIZE / 2; z += _TILE_SIZE) {
+        for (float x = -_ENV_SIZE / 2; x < _ENV_SIZE / 2; x += _TILE_SIZE) {
+            float amplitude = 1.0f;
+            float timeDis = _curFrameTime;
+            float y_coord1 = amplitude * glm::sin(z + timeDis) + _ENV_SIZE;  // The y-coordinate is constant (for now)
+            float y_coord2 = amplitude * glm::sin(z + _TILE_SIZE + timeDis) + _ENV_SIZE;
+
+            Mesh::Vertex vert1;  // Top left
+            vert1.position = vec3(x, y_coord1, z);
+            vert1.normal = normalize(vec3(0, 1, amplitude * glm::cos(z)));
+            vert1.texCoord0 = vec2(0, 0);
+            cpuVertexArray->push_back(vert1);
+            cpuIndexArray->push_back(counter);
+            counter++;
+
+            
+
+            Mesh::Vertex vert2;  // Bottom left
+            vert2.position = vec3(x, y_coord2, z + _TILE_SIZE);
+            vert2.normal = normalize(vec3(0, 1, amplitude * glm::cos(z + _TILE_SIZE)));
+            vert2.texCoord0 = vec2(0, 0);
+            cpuVertexArray->push_back(vert2);
+            cpuIndexArray->push_back(counter);
+            counter++;
+
+            Mesh::Vertex vert3;  // Top Right
+            vert3.position = vec3(x + _TILE_SIZE, y_coord1, z );
+            vert3.normal = normalize(vec3(0, 1, amplitude * glm::cos(z)));
+            vert3.texCoord0 = vec2(0, 0);
+            cpuVertexArray->push_back(vert3);
+            cpuIndexArray->push_back(counter);
+            cpuIndexArray->push_back(counter);  // Dupe
+            counter++;
+
+            cpuIndexArray->push_back(counter - 2); // Dupe the previous vertex
+
+            Mesh::Vertex vert4;  // Bottom right
+            vert4.position = vec3(x + _TILE_SIZE, y_coord2, z + _TILE_SIZE);
+            vert4.normal = normalize(vec3(0, 1, amplitude * glm::cos(z + _TILE_SIZE)));
+            vert4.texCoord0 = vec2(0, 0);
+            cpuVertexArray->push_back(vert4);
+            cpuIndexArray->push_back(counter);
+            counter++;
+        }
+    }
 }

@@ -72,7 +72,8 @@ private:
     float currTheta;
     float currPhi;
     vec3 angleToSpherePoint(float theta, float phi);
-    void initWaterMesh();
+    void initWaterMesh(string waveType);
+    void simpleZWater(std::vector<Mesh::Vertex> *cpuVertexArray, std::vector<int> *cpuIndexArray);
 
     glm::vec2 lastMousePos;
     glm::vec3 eye_world;
