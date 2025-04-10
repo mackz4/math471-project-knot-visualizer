@@ -56,10 +56,11 @@ public:
     
 private:
     
-    const float _ENV_SIZE = 10.0; // orig _ENV_WIDTH
+    const float _ENV_WIDTH = 24.0; // orig _ENV_WIDTH
+    const float _ENV_HEIGHT = 14.0;
     const float _TILE_SIZE = 0.5f; // orig _TILE_WIDTH
 
-    const float _CAMERA_RADIUS = 30.0f;
+    const float _CAMERA_RADIUS = 50.0f;
 
     std::unique_ptr<basicgraphics::Mesh> _waterMesh;
     std::unique_ptr<basicgraphics::Mesh> _wallsMesh;

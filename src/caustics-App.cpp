@@ -288,12 +288,12 @@ void App::initWaterMesh(string waveType) {
 void App::simpleZWater(std::vector<Mesh::Vertex> *cpuVertexArray, std::vector<int> *cpuIndexArray) {
     // Create the vertices
     int counter = 0;
-    for (float z = -_ENV_SIZE / 2; z < _ENV_SIZE / 2; z += _TILE_SIZE) {
-        for (float x = -_ENV_SIZE / 2; x < _ENV_SIZE / 2; x += _TILE_SIZE) {
+    for (float z = -_ENV_WIDTH / 2.0; z < _ENV_WIDTH / 2.0; z += _TILE_SIZE) {
+        for (float x = -_ENV_WIDTH / 2.0; x < _ENV_WIDTH / 2.0; x += _TILE_SIZE) {
             float amplitude = 1.0f;
             float timeDis = _curFrameTime;
-            float y_coord1 = amplitude * glm::sin(z + timeDis) + _ENV_SIZE/2.0f - amplitude;  // The y-coordinate is constant (for now)
-            float y_coord2 = amplitude * glm::sin(z + _TILE_SIZE + timeDis) + _ENV_SIZE/2.0f - amplitude;
+            float y_coord1 = amplitude * glm::sin(z + timeDis) + _ENV_HEIGHT / 2.0f - amplitude;  // The y-coordinate is constant (for now)
+            float y_coord2 = amplitude * glm::sin(z + _TILE_SIZE + timeDis) + _ENV_HEIGHT / 2.0f - amplitude;
 
             Mesh::Vertex vert1;  // Top left
             vert1.position = vec3(x, y_coord1, z);
@@ -340,23 +340,23 @@ void App::initEnvironment() {
 
     // Set the mesh
     Mesh::Vertex backTopLeft;  // 0
-    backTopLeft.position = vec3(-_ENV_SIZE/2.0f, _ENV_SIZE/2.0f, -_ENV_SIZE/2.0f);
+    backTopLeft.position = vec3(-_ENV_WIDTH/2.0f, _ENV_HEIGHT/2.0f, -_ENV_WIDTH/2.0f);
     backTopLeft.normal = vec3(0, 0, 1);
-    backTopLeft.texCoord0 = vec2(0, 0);
+    backTopLeft.texCoord0 = vec2(0.0, 0.0);
     cpuVertexArray.push_back(backTopLeft);
     cpuIndexArray.push_back(0);
     
     Mesh::Vertex backBottomLeft;  // 1
-    backBottomLeft.position = vec3(-_ENV_SIZE/2.0f, -_ENV_SIZE/2.0f, -_ENV_SIZE/2.0f);
+    backBottomLeft.position = vec3(-_ENV_WIDTH/2.0f, -_ENV_HEIGHT /2.0f, -_ENV_WIDTH /2.0f);
     backBottomLeft.normal = vec3(0, 0, 1);
-    backBottomLeft.texCoord0 = vec2(0, 0);
+    backBottomLeft.texCoord0 = vec2(0.0, _ENV_HEIGHT);
     cpuVertexArray.push_back(backBottomLeft);
     cpuIndexArray.push_back(1);
     
     Mesh::Vertex backTopRight;  // 2
-    backTopRight.position = vec3(_ENV_SIZE/2.0f, _ENV_SIZE/2.0f, -_ENV_SIZE/2.0f);
+    backTopRight.position = vec3(_ENV_WIDTH /2.0f, _ENV_HEIGHT /2.0f, -_ENV_WIDTH /2.0f);
     backTopRight.normal = vec3(0, 0, 1);
-    backTopRight.texCoord0 = vec2(0, 0);
+    backTopRight.texCoord0 = vec2(_ENV_WIDTH, 0.0);
     cpuVertexArray.push_back(backTopRight);
     cpuIndexArray.push_back(2);
     
@@ -364,30 +364,30 @@ void App::initEnvironment() {
     cpuIndexArray.push_back(1);  // Dupe backBottomLeft
     
     Mesh::Vertex backBottomRight;  // 3
-    backBottomRight.position = vec3(_ENV_SIZE/2.0f, -_ENV_SIZE/2.0f, -_ENV_SIZE/2.0f);
+    backBottomRight.position = vec3(_ENV_WIDTH /2.0f, -_ENV_HEIGHT /2.0f, -_ENV_WIDTH /2.0f);
     backBottomRight.normal = vec3(0, 0, 1);
-    backBottomRight.texCoord0 = vec2(0, 0);
+    backBottomRight.texCoord0 = vec2(_ENV_WIDTH, _ENV_HEIGHT);
     cpuVertexArray.push_back(backBottomRight);
     cpuIndexArray.push_back(3);
     
     Mesh::Vertex backTopRight2;  // 4
-    backTopRight2.position = vec3(_ENV_SIZE/2.0f, _ENV_SIZE/2.0f, -_ENV_SIZE/2.0f);
+    backTopRight2.position = vec3(_ENV_WIDTH /2.0f, _ENV_HEIGHT /2.0f, -_ENV_WIDTH /2.0f);
     backTopRight2.normal = vec3(-1, 0, 0);
     backTopRight2.texCoord0 = vec2(0, 0);
     cpuVertexArray.push_back(backTopRight2);
     cpuIndexArray.push_back(4);
     
     Mesh::Vertex backBottomRight2;  // 5
-    backBottomRight2.position = vec3(_ENV_SIZE/2.0f, -_ENV_SIZE/2.0f, -_ENV_SIZE/2.0f);
+    backBottomRight2.position = vec3(_ENV_WIDTH /2.0f, -_ENV_HEIGHT /2.0f, -_ENV_WIDTH /2.0f);
     backBottomRight2.normal = vec3(-1, 0, 0);
-    backBottomRight2.texCoord0 = vec2(0, 0);
+    backBottomRight2.texCoord0 = vec2(0.0, _ENV_HEIGHT);
     cpuVertexArray.push_back(backBottomRight2);
     cpuIndexArray.push_back(5);
     
     Mesh::Vertex frontTopRight;  // 6
-    frontTopRight.position = vec3(_ENV_SIZE/2.0f, _ENV_SIZE/2.0f, _ENV_SIZE/2.0f);
+    frontTopRight.position = vec3(_ENV_WIDTH /2.0f, _ENV_HEIGHT /2.0f, _ENV_WIDTH /2.0f);
     frontTopRight.normal = vec3(-1, 0, 0);
-    frontTopRight.texCoord0 = vec2(0, 0);
+    frontTopRight.texCoord0 = vec2(_ENV_WIDTH, 0.0);
     cpuVertexArray.push_back(frontTopRight);
     cpuIndexArray.push_back(6);
     
@@ -395,30 +395,30 @@ void App::initEnvironment() {
     cpuIndexArray.push_back(5);  // Dupe backBottomLeft
     
     Mesh::Vertex frontBottomRight;  // 7
-    frontBottomRight.position = vec3(_ENV_SIZE/2.0f, -_ENV_SIZE/2.0f, _ENV_SIZE/2.0f);
+    frontBottomRight.position = vec3(_ENV_WIDTH /2.0f, -_ENV_HEIGHT /2.0f, _ENV_WIDTH /2.0f);
     frontBottomRight.normal = vec3(-1, 0, 0);
-    frontBottomRight.texCoord0 = vec2(0, 0);
+    frontBottomRight.texCoord0 = vec2(_ENV_WIDTH, _ENV_HEIGHT);
     cpuVertexArray.push_back(frontBottomRight);
     cpuIndexArray.push_back(7);
     
     Mesh::Vertex frontTopRight2;  // 8
-    frontTopRight2.position = vec3(_ENV_SIZE/2.0f, _ENV_SIZE/2.0f, _ENV_SIZE/2.0f);
+    frontTopRight2.position = vec3(_ENV_WIDTH /2.0f, _ENV_HEIGHT /2.0f, _ENV_WIDTH /2.0f);
     frontTopRight2.normal = vec3(0, 0, -1);
-    frontTopRight2.texCoord0 = vec2(0, 0);
+    frontTopRight2.texCoord0 = vec2(0.0, 0.0);
     cpuVertexArray.push_back(frontTopRight2);
     cpuIndexArray.push_back(8);
     
     Mesh::Vertex frontBottomRight2;  // 9
-    frontBottomRight2.position = vec3(_ENV_SIZE/2.0f, -_ENV_SIZE/2.0f, _ENV_SIZE/2.0f);
+    frontBottomRight2.position = vec3(_ENV_WIDTH /2.0f, -_ENV_HEIGHT /2.0f, _ENV_WIDTH /2.0f);
     frontBottomRight2.normal = vec3(0, 0, -1);
-    frontBottomRight2.texCoord0 = vec2(0, 0);
+    frontBottomRight2.texCoord0 = vec2(0.0, _ENV_HEIGHT);
     cpuVertexArray.push_back(frontBottomRight2);
     cpuIndexArray.push_back(9);
     
     Mesh::Vertex frontTopLeft;  // 10
-    frontTopLeft.position = vec3(-_ENV_SIZE/2.0f, _ENV_SIZE/2.0f, _ENV_SIZE/2.0f);
+    frontTopLeft.position = vec3(-_ENV_WIDTH /2.0f, _ENV_HEIGHT /2.0f, _ENV_WIDTH /2.0f);
     frontTopLeft.normal = vec3(0, 0, -1);
-    frontTopLeft.texCoord0 = vec2(0, 0);
+    frontTopLeft.texCoord0 = vec2(_ENV_WIDTH, 0.0);
     cpuVertexArray.push_back(frontTopLeft);
     cpuIndexArray.push_back(10);
     
@@ -426,30 +426,30 @@ void App::initEnvironment() {
     cpuIndexArray.push_back(9);  // Dupe backBottomLeft
     
     Mesh::Vertex frontBottomLeft;  // 11
-    frontBottomLeft.position = vec3(-_ENV_SIZE/2.0f, -_ENV_SIZE/2.0f, _ENV_SIZE/2.0f);
+    frontBottomLeft.position = vec3(-_ENV_WIDTH /2.0f, -_ENV_HEIGHT /2.0f, _ENV_WIDTH /2.0f);
     frontBottomLeft.normal = vec3(0, 0, -1);
-    frontBottomLeft.texCoord0 = vec2(0, 0);
+    frontBottomLeft.texCoord0 = vec2(_ENV_WIDTH, _ENV_HEIGHT);
     cpuVertexArray.push_back(frontBottomLeft);
     cpuIndexArray.push_back(11);
     
     Mesh::Vertex frontTopLeft2;  // 12
-    frontTopLeft2.position = vec3(-_ENV_SIZE/2.0f, _ENV_SIZE/2.0f, _ENV_SIZE/2.0f);
+    frontTopLeft2.position = vec3(-_ENV_WIDTH /2.0f, _ENV_HEIGHT /2.0f, _ENV_WIDTH /2.0f);
     frontTopLeft2.normal = vec3(1, 0, 0);
-    frontTopLeft2.texCoord0 = vec2(0, 0);
+    frontTopLeft2.texCoord0 = vec2(0.0, 0.0);
     cpuVertexArray.push_back(frontTopLeft2);
     cpuIndexArray.push_back(12);
     
     Mesh::Vertex frontBottomLeft2;  // 13
-    frontBottomLeft2.position = vec3(-_ENV_SIZE/2.0f, -_ENV_SIZE/2.0f, _ENV_SIZE/2.0f);
+    frontBottomLeft2.position = vec3(-_ENV_WIDTH /2.0f, -_ENV_HEIGHT /2.0f, _ENV_WIDTH /2.0f);
     frontBottomLeft2.normal = vec3(1, 0, 0);
-    frontBottomLeft2.texCoord0 = vec2(0, 0);
+    frontBottomLeft2.texCoord0 = vec2(0.0, _ENV_HEIGHT);
     cpuVertexArray.push_back(frontBottomLeft2);
     cpuIndexArray.push_back(13);
     
     Mesh::Vertex backTopLeft2;  // 14
-    backTopLeft2.position = vec3(-_ENV_SIZE/2.0f, _ENV_SIZE/2.0f, -_ENV_SIZE/2.0f);
+    backTopLeft2.position = vec3(-_ENV_WIDTH /2.0f, _ENV_HEIGHT /2.0f, -_ENV_WIDTH /2.0f);
     backTopLeft2.normal = vec3(1, 0, 0);
-    backTopLeft2.texCoord0 = vec2(0, 0);
+    backTopLeft2.texCoord0 = vec2(_ENV_WIDTH, 0.0);
     cpuVertexArray.push_back(backTopLeft2);
     cpuIndexArray.push_back(14);
     
@@ -457,30 +457,30 @@ void App::initEnvironment() {
     cpuIndexArray.push_back(13);  // Dupe backBottomLeft
     
     Mesh::Vertex backBottomLeft2;  // 15
-    backBottomLeft2.position = vec3(-_ENV_SIZE/2.0f, -_ENV_SIZE/2.0f, -_ENV_SIZE/2.0f);
+    backBottomLeft2.position = vec3(-_ENV_WIDTH /2.0f, -_ENV_HEIGHT /2.0f, -_ENV_WIDTH /2.0f);
     backBottomLeft2.normal = vec3(1, 0, 0);
-    backBottomLeft2.texCoord0 = vec2(0, 0);
+    backBottomLeft2.texCoord0 = vec2(_ENV_WIDTH, _ENV_HEIGHT);
     cpuVertexArray.push_back(backBottomLeft2);
     cpuIndexArray.push_back(15);
     
     Mesh::Vertex backBottomLeft3;  // 16
-    backBottomLeft3.position = vec3(-_ENV_SIZE/2.0f, -_ENV_SIZE/2.0f, -_ENV_SIZE/2.0f);
+    backBottomLeft3.position = vec3(-_ENV_WIDTH /2.0f, -_ENV_HEIGHT /2.0f, -_ENV_WIDTH /2.0f);
     backBottomLeft3.normal = vec3(0, 1, 0);
-    backBottomLeft3.texCoord0 = vec2(0, 0);
+    backBottomLeft3.texCoord0 = vec2(0.0, 0.0);
     cpuVertexArray.push_back(backBottomLeft3);
     cpuIndexArray.push_back(16);
     
     Mesh::Vertex frontBottomLeft3;  // 17
-    frontBottomLeft3.position = vec3(-_ENV_SIZE/2.0f, -_ENV_SIZE/2.0f, _ENV_SIZE/2.0f);
+    frontBottomLeft3.position = vec3(-_ENV_WIDTH /2.0f, -_ENV_HEIGHT /2.0f, _ENV_WIDTH /2.0f);
     frontBottomLeft3.normal = vec3(0, 1, 0);
-    frontBottomLeft3.texCoord0 = vec2(0, 0);
+    frontBottomLeft3.texCoord0 = vec2(0.0, _ENV_HEIGHT);
     cpuVertexArray.push_back(frontBottomLeft3);
     cpuIndexArray.push_back(17);
     
     Mesh::Vertex backBottomRight3;  // 18
-    backBottomRight3.position = vec3(_ENV_SIZE/2.0f, -_ENV_SIZE/2.0f, -_ENV_SIZE/2.0f);
+    backBottomRight3.position = vec3(_ENV_WIDTH /2.0f, -_ENV_HEIGHT /2.0f, -_ENV_WIDTH /2.0f);
     backBottomRight3.normal = vec3(0, 1, 0);
-    backBottomRight3.texCoord0 = vec2(0, 0);
+    backBottomRight3.texCoord0 = vec2(_ENV_WIDTH, 0.0);
     cpuVertexArray.push_back(backBottomRight3);
     cpuIndexArray.push_back(18);
     
@@ -488,15 +488,20 @@ void App::initEnvironment() {
     cpuIndexArray.push_back(17);  // Dupe backBottomLeft
     
     Mesh::Vertex frontBottomRight3;  // 19
-    frontBottomRight3.position = vec3(_ENV_SIZE/2.0f, -_ENV_SIZE/2.0f, _ENV_SIZE/2.0f);
+    frontBottomRight3.position = vec3(_ENV_WIDTH /2.0f, -_ENV_HEIGHT /2.0f, _ENV_WIDTH /2.0f);
     frontBottomRight3.normal = vec3(0, 1, 0);
-    frontBottomRight3.texCoord0 = vec2(0, 0);
+    frontBottomRight3.texCoord0 = vec2(_ENV_WIDTH, _ENV_HEIGHT);
     cpuVertexArray.push_back(frontBottomRight3);
     cpuIndexArray.push_back(19);
     
     const int numVertices = cpuVertexArray.size();
     const int cpuVertexByteSize = sizeof(Mesh::Vertex) * numVertices;
     const int cpuIndexByteSize = sizeof(int) * cpuIndexArray.size();
+
+    //std::shared_ptr<Texture> tex;
+    //tex = Texture::create2DTextureFromFile("C:\\Users\\mackz\\Downloads\\poolWall.jpg");
+    //tex->setTexParameteri(GL_TEXTURE_WRAP_T, GL_REPEAT);
+    //textures.push_back(tex);
 
     _wallsMesh.reset(new Mesh(textures, GL_TRIANGLES, GL_STATIC_DRAW, cpuVertexByteSize, cpuIndexByteSize, 0, cpuVertexArray, cpuIndexArray.size(), cpuIndexByteSize, &cpuIndexArray[0]));
 
