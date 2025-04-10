@@ -186,7 +186,11 @@ void App::onRenderGraphicsScene(const VRGraphicsState &renderState) {
 	std::string fps = "FPS: " + std::to_string(1.0/deltaTime);
 	drawText(fps, 10, 10, windowHeight, windowWidth);
     
+    glDisable(GL_CULL_FACE);
     _waterMesh->draw(_shader);
+    
+    // TODO: enable then draw walls
+    glEnable(GL_CULL_FACE);  // Use GL_frontfacing if needed
 }
 
 void App::drawText(const std::string text, float xPos, float yPos, GLfloat windowHeight, GLfloat windowWidth) {
@@ -291,7 +295,7 @@ void App::simpleZWater(std::vector<Mesh::Vertex> *cpuVertexArray, std::vector<in
 
             Mesh::Vertex vert1;  // Top left
             vert1.position = vec3(x, y_coord1, z);
-            vert1.normal = normalize(vec3(0, 1, amplitude * glm::cos(z)));
+            vert1.normal = normalize(vec3(0, glm::sin(z + timeDis), glm::cos(z + timeDis)));
             vert1.texCoord0 = vec2(0, 0);
             cpuVertexArray->push_back(vert1);
             cpuIndexArray->push_back(counter);
@@ -299,7 +303,7 @@ void App::simpleZWater(std::vector<Mesh::Vertex> *cpuVertexArray, std::vector<in
 
             Mesh::Vertex vert2;  // Bottom left
             vert2.position = vec3(x, y_coord2, z + _TILE_SIZE);
-            vert2.normal = normalize(vec3(0, 1, amplitude * glm::cos(z + _TILE_SIZE)));
+            vert2.normal = normalize(vec3(0, glm::sin(z + _TILE_SIZE + timeDis), glm::cos(z + _TILE_SIZE + timeDis)));
             vert2.texCoord0 = vec2(0, 0);
             cpuVertexArray->push_back(vert2);
             cpuIndexArray->push_back(counter);
@@ -307,7 +311,7 @@ void App::simpleZWater(std::vector<Mesh::Vertex> *cpuVertexArray, std::vector<in
 
             Mesh::Vertex vert3;  // Top Right
             vert3.position = vec3(x + _TILE_SIZE, y_coord1, z );
-            vert3.normal = normalize(vec3(0, 1, amplitude * glm::cos(z)));
+            vert3.normal = normalize(vec3(0, glm::sin(z + timeDis), glm::cos(z + timeDis)));
             vert3.texCoord0 = vec2(0, 0);
             cpuVertexArray->push_back(vert3);
             cpuIndexArray->push_back(counter);
@@ -318,7 +322,7 @@ void App::simpleZWater(std::vector<Mesh::Vertex> *cpuVertexArray, std::vector<in
 
             Mesh::Vertex vert4;  // Bottom right
             vert4.position = vec3(x + _TILE_SIZE, y_coord2, z + _TILE_SIZE);
-            vert4.normal = normalize(vec3(0, 1, amplitude * glm::cos(z + _TILE_SIZE)));
+            vert4.normal = normalize(vec3(0, glm::sin(z + _TILE_SIZE + timeDis), glm::cos(z + _TILE_SIZE + timeDis)));
             vert4.texCoord0 = vec2(0, 0);
             cpuVertexArray->push_back(vert4);
             cpuIndexArray->push_back(counter);
