@@ -63,7 +63,6 @@ private:
 
     std::unique_ptr<basicgraphics::Mesh> _waterMesh;
     std::unique_ptr<basicgraphics::Mesh> _wallsMesh;
-    std::unique_ptr<basicgraphics::Mesh> _floorMesh;
 
 	double _lastTime;
 	double _curFrameTime;
@@ -73,8 +72,7 @@ private:
     float currPhi;
     vec3 angleToSpherePoint(float theta, float phi);
     void initWaterMesh(string waveType);
-    void initWallsMesh();
-    void initFloorMesh();
+    void initEnvironment();
     void simpleZWater(std::vector<Mesh::Vertex> *cpuVertexArray, std::vector<int> *cpuIndexArray);
 
     glm::vec2 lastMousePos;
