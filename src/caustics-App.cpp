@@ -143,8 +143,8 @@ void App::onRenderGraphicsContext(const VRGraphicsState &renderState) {
     }
     
 	initWaterMesh("SimpleZ");
-	//initWallsMesh();
-	//initFloorMesh();
+	initWallsMesh();
+	initFloorMesh();
 }
 
 
@@ -297,8 +297,6 @@ void App::simpleZWater(std::vector<Mesh::Vertex> *cpuVertexArray, std::vector<in
             cpuIndexArray->push_back(counter);
             counter++;
 
-            
-
             Mesh::Vertex vert2;  // Bottom left
             vert2.position = vec3(x, y_coord2, z + _TILE_SIZE);
             vert2.normal = normalize(vec3(0, 1, amplitude * glm::cos(z + _TILE_SIZE)));
@@ -327,4 +325,13 @@ void App::simpleZWater(std::vector<Mesh::Vertex> *cpuVertexArray, std::vector<in
             counter++;
         }
     }
+}
+
+void App::initWallsMesh() {
+
+}
+
+void App::initFloorMesh() {
+
+
 }
