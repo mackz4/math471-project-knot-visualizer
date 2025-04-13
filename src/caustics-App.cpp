@@ -182,6 +182,10 @@ void App::onRenderGraphicsScene(const VRGraphicsState &renderState) {
 	_shader.setUniform("normal_mat", mat3(transpose(inverse(mat4(1.0)))));
 	_shader.setUniform("eye_world", eye_world);
 
+
+    // Set uniforms
+    _shader.setUniform("lightVector", lightVector);
+
 	
 	double deltaTime = _curFrameTime - _lastTime;
 	std::string fps = "FPS: " + std::to_string(1.0/deltaTime);
@@ -498,8 +502,8 @@ void App::initEnvironment() {
     const int cpuVertexByteSize = sizeof(Mesh::Vertex) * numVertices;
     const int cpuIndexByteSize = sizeof(int) * cpuIndexArray.size();
 
-    //std::shared_ptr<Texture> tex;
-    //tex = Texture::create2DTextureFromFile("C:\\Users\\mackz\\Downloads\\poolWall.jpg");
+    std::shared_ptr<Texture> tex;
+    //tex = Texture::create2DTextureFromFile("C:\\Users\\mackz\\Downloads\\tex.jpg");
     //tex->setTexParameteri(GL_TEXTURE_WRAP_T, GL_REPEAT);
     //textures.push_back(tex);
 

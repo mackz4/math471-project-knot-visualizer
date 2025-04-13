@@ -80,6 +80,8 @@ private:
     glm::vec3 eye_world;
     glm::vec3 up_vector;
 
+    glm::vec3 lightDir;
+
 	virtual void reloadShaders();
 	GLSLProgram _shader;
 
