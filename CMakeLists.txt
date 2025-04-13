@@ -44,8 +44,8 @@ set(header_files
 
 set(extra_files
   README.md
-  resources/vertexShader.vert
-  resources/fragmentShader.frag
+  resources/vertex.vert
+  resources/caustic.frag
 )
 
 set_source_files_properties(${extra_files} PROPERTIES HEADER_FILE_ONLY TRUE)
