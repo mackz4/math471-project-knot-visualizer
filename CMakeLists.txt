@@ -46,6 +46,8 @@ set(extra_files
   README.md
   resources/vertex.vert
   resources/caustic.frag
+  resources/images/poolTile.jpg
+  resources/images/testTiles.jpg
 )
 
 set_source_files_properties(${extra_files} PROPERTIES HEADER_FILE_ONLY TRUE)

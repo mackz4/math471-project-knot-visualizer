@@ -498,12 +498,16 @@ void App::initEnvironment() {
     const int cpuVertexByteSize = sizeof(Mesh::Vertex) * numVertices;
     const int cpuIndexByteSize = sizeof(int) * cpuIndexArray.size();
 
-    //std::shared_ptr<Texture> tex;
+    std::shared_ptr<Texture> tex;
     //tex = Texture::create2DTextureFromFile("C:\\Users\\mackz\\Downloads\\poolWall.jpg");
-    //tex->setTexParameteri(GL_TEXTURE_WRAP_T, GL_REPEAT);
-    //textures.push_back(tex);
+    tex = Texture::create2DTextureFromFile("/Users/miril/COMP465/comp465-project-ooooo-water-pretty/resources/images/poolTile.jpg");
+    tex->setTexParameteri(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    tex->setTexParameteri(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    tex->setTexParameteri(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    tex->setTexParameteri(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    textures.push_back(tex);
 
     _wallsMesh.reset(new Mesh(textures, GL_TRIANGLES, GL_STATIC_DRAW, cpuVertexByteSize, cpuIndexByteSize, 0, cpuVertexArray, cpuIndexArray.size(), cpuIndexByteSize, &cpuIndexArray[0]));
 
-    _wallsMesh->setMaterialColor(vec4(1.0, 1.0, 1.0, 1.0));
+    //_wallsMesh->setMaterialColor(vec4(1.0, 1.0, 1.0, 1.0));
 }
