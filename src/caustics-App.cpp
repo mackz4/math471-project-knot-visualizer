@@ -266,7 +266,7 @@ void App::drawText(const std::string text, float xPos, float yPos, GLfloat windo
 void App::reloadShaders()
 {
 	_shader.compileShader("vertex.vert", GLSLShader::VERTEX);
-	_shader.compileShader("texture.frag", GLSLShader::FRAGMENT);
+	_shader.compileShader("caustic.frag", GLSLShader::FRAGMENT);
 	_shader.link();
 	_shader.use();
 }

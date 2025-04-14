@@ -29,6 +29,7 @@ using namespace MinVR;
 #include <GL/gl.h>
 #endif
 
+#include "Skybox.h"
 #include <BasicGraphics.h>
 using namespace basicgraphics;
 

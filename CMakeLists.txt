@@ -36,18 +36,18 @@ message(STATUS "Using install prefix: ${CMAKE_INSTALL_PREFIX}")
 set(source_files
   src/main.cpp
   src/caustics-App.cpp
+  src/Skybox.cpp
 )
 
 set(header_files
   src/caustics-App.h
+  src/Skybox.h
 )
 
 set(extra_files
   README.md
   resources/vertex.vert
   resources/caustic.frag
-  resources/images/poolTile.jpg
-  resources/images/testTiles.jpg
 )
 
 set_source_files_properties(${extra_files} PROPERTIES HEADER_FILE_ONLY TRUE)
