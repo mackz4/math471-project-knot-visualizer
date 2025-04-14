@@ -142,9 +142,27 @@ void App::onRenderGraphicsContext(const VRGraphicsState &renderState) {
 		reloadShaders();
 
 		initializeText();
+        
+        // Initialize the texture environment map
+        // Order should be:
+        // +X (right)
+        // -X (left)
+        // +Y (top)
+        // -Y (bottom)
+        // +Z (front)
+        // -Z (back)
+        string textureFiles[] = {"desert_evening_east.jpg", "desert_evening_west.jpg", "desert_evening_up.jpg", "desert_evening_down.jpg", "desert_evening_north.jpg", "desert_evening_south.jpg"};
+        environmentMap = Texture::createCubeMapFromFiles(textureFiles, true, 4);
+        environmentMap->setTexParameteri(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        environmentMap->setTexParameteri(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        environmentMap->setTexParameteri(GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+        environmentMap->setTexParameteri(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        environmentMap->setTexParameteri(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        
+        skyBox.reset(new Skybox(environmentMap));
     }
     
-	initWaterMesh("SimpleZ");
+	//initWaterMesh("SimpleZ");
 	initEnvironment();
 }
 
@@ -182,13 +200,38 @@ void App::onRenderGraphicsScene(const VRGraphicsState &renderState) {
 	_shader.setUniform("normal_mat", mat3(transpose(inverse(mat4(1.0)))));
 	_shader.setUniform("eye_world", eye_world);
 
+    
+    // Set Uniforms
+    _shader.setUniform("light_direction", _LIGHT_DIRECTION);
+    
+    // Properties of the material the model is made out of (the "K" terms in the equations discussed in class)
+    // These values should make the model look like it is made out of a metal, like brass
+    vec3 ambientReflectionCoeff(0.7, 0.7, 0.7);
+    vec3 diffuseReflectionCoeff(0.7, 0.7, 0.7);
+    vec3 specularReflectionCoeff(0.9, 0.9, 0.9);
+    float m = 0.55;
+    //float r0 = 0.7;
+    
+    // Properties of the light source (the "I" terms in the equations discussed in class)
+    // These values are for a white light so the r,g,b intensities are all the same
+    vec3 ambientLightIntensity(0.3, 0.3, 0.3);
+    vec3 diffuseLightIntensity(0.6, 0.6, 0.6);
+    vec3 specularLightIntensity(1.0, 1.0, 1.0);
+    
+    
+    float glassR0 = 0.4;
+    //float eta = 0.67;
+    vec3 glassEta(0.65, 0.67, 0.68);
+    
+    _shader.setUniform("glassR0", glassR0);
+    _shader.setUniform("glassEta", glassEta);
 	
 	double deltaTime = _curFrameTime - _lastTime;
 	std::string fps = "FPS: " + std::to_string(1.0/deltaTime);
 	drawText(fps, 10, 10, windowHeight, windowWidth);
     
     glDisable(GL_CULL_FACE);
-    _waterMesh->draw(_shader);
+    //_waterMesh->draw(_shader);
     
     // TODO: enable then draw walls
     glEnable(GL_CULL_FACE);  // Use GL_frontfacing if needed
@@ -222,7 +265,7 @@ void App::drawText(const std::string text, float xPos, float yPos, GLfloat windo
 
 void App::reloadShaders()
 {
-	_shader.compileShader("texture.vert", GLSLShader::VERTEX);
+	_shader.compileShader("vertex.vert", GLSLShader::VERTEX);
 	_shader.compileShader("texture.frag", GLSLShader::FRAGMENT);
 	_shader.link();
 	_shader.use();
@@ -500,11 +543,11 @@ void App::initEnvironment() {
 
     std::shared_ptr<Texture> tex;
     //tex = Texture::create2DTextureFromFile("C:\\Users\\mackz\\Downloads\\poolWall.jpg");
-    tex = Texture::create2DTextureFromFile("/Users/miril/COMP465/comp465-project-ooooo-water-pretty/resources/images/poolTile.jpg");
-    tex->setTexParameteri(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    tex->setTexParameteri(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    tex->setTexParameteri(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    tex->setTexParameteri(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    tex = Texture::create2DTextureFromFile("/Users/miril/COMP465/comp465-project-ooooo-water-pretty/resources/images/testTiles.jpg");
+    tex->setTexParameteri(GL_TEXTURE_WRAP_S, GL_REPEAT);
+    tex->setTexParameteri(GL_TEXTURE_WRAP_T, GL_REPEAT);
+    tex->setTexParameteri(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    tex->setTexParameteri(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     textures.push_back(tex);
 
     _wallsMesh.reset(new Mesh(textures, GL_TRIANGLES, GL_STATIC_DRAW, cpuVertexByteSize, cpuIndexByteSize, 0, cpuVertexArray, cpuIndexArray.size(), cpuIndexByteSize, &cpuIndexArray[0]));

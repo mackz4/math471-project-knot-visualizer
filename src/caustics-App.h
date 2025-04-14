@@ -59,8 +59,12 @@ private:
     const float _ENV_WIDTH = 24.0; // orig _ENV_WIDTH
     const float _ENV_HEIGHT = 14.0;
     const float _TILE_SIZE = 0.5f; // orig _TILE_WIDTH
+    const glm::vec3 _LIGHT_DIRECTION = glm::vec3(0.0f, -1.0f, 0.0f);
 
     const float _CAMERA_RADIUS = 50.0f;
+    
+    std::shared_ptr<basicgraphics::Texture> environmentMap;
+    std::shared_ptr<basicgraphics::Skybox> skyBox;
 
     std::unique_ptr<basicgraphics::Mesh> _waterMesh;
     std::unique_ptr<basicgraphics::Mesh> _wallsMesh;
@@ -71,7 +75,7 @@ private:
     bool mouseDown; // Signifies whether the left mouse button is currently held down.
     float currTheta;
     float currPhi;
-    vec3 angleToSpherePoint(float theta, float phi);
+    glm::vec3 angleToSpherePoint(float theta, float phi);
     void initWaterMesh(string waveType);
     void initEnvironment();
     void simpleZWater(std::vector<Mesh::Vertex> *cpuVertexArray, std::vector<int> *cpuIndexArray);
