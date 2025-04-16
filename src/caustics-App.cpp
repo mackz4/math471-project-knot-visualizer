@@ -137,6 +137,13 @@ void App::onRenderGraphicsContext(const VRGraphicsState &renderState) {
 
 		// This sets the background color that is used to clear the canvas
 		glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+        
+        // Set the Environment with a simple Binn-Phong shader
+        _environment_shader.compileShader("vertex.vert", GLSLShader::VERTEX);
+        _environment_shader.compileShader("environment.frag", GLSLShader::FRAGMENT);
+        _environment_shader.link();
+        _environment_shader.use();
+        initEnvironment();
 
 		// This load shaders from disk, we do it once when the program starts up.
 		reloadShaders();
@@ -160,10 +167,20 @@ void App::onRenderGraphicsContext(const VRGraphicsState &renderState) {
         environmentMap->setTexParameteri(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         
         skyBox.reset(new Skybox(environmentMap));
+        
+        // set the light position to roughly match up with the sun position in the skybox texture
+        float radius = 10.0;
+        lightPosition = vec4(-1.7*radius, 0.3*radius, -1.0*radius, 1.0);
+        
+        //tex = Texture::create2DTextureFromFile("C:\\Users\\mackz\\Downloads\\poolWall.jpg");
+        _tex = Texture::create2DTextureFromFile("/Users/miril/COMP465/comp465-project-ooooo-water-pretty/resources/images/poolTile.jpg");
+        _tex->setTexParameteri(GL_TEXTURE_WRAP_S, GL_REPEAT);
+        _tex->setTexParameteri(GL_TEXTURE_WRAP_T, GL_REPEAT);
+        _tex->setTexParameteri(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        _tex->setTexParameteri(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     }
     
-	//initWaterMesh("SimpleZ");
-	initEnvironment();
+	initWaterMesh("SimpleZ");
 }
 
 
@@ -204,20 +221,7 @@ void App::onRenderGraphicsScene(const VRGraphicsState &renderState) {
     // Set Uniforms
     _shader.setUniform("light_direction", _LIGHT_DIRECTION);
     
-    // Properties of the material the model is made out of (the "K" terms in the equations discussed in class)
-    // These values should make the model look like it is made out of a metal, like brass
-    vec3 ambientReflectionCoeff(0.7, 0.7, 0.7);
-    vec3 diffuseReflectionCoeff(0.7, 0.7, 0.7);
-    vec3 specularReflectionCoeff(0.9, 0.9, 0.9);
-    float m = 0.55;
-    //float r0 = 0.7;
-    
-    // Properties of the light source (the "I" terms in the equations discussed in class)
-    // These values are for a white light so the r,g,b intensities are all the same
-    vec3 ambientLightIntensity(0.3, 0.3, 0.3);
-    vec3 diffuseLightIntensity(0.6, 0.6, 0.6);
-    vec3 specularLightIntensity(1.0, 1.0, 1.0);
-    
+    // Set Uniforms
     
     float glassR0 = 0.4;
     //float eta = 0.67;
@@ -231,11 +235,45 @@ void App::onRenderGraphicsScene(const VRGraphicsState &renderState) {
 	drawText(fps, 10, 10, windowHeight, windowWidth);
     
     glDisable(GL_CULL_FACE);
-    //_waterMesh->draw(_shader);
+    _waterMesh->draw(_shader);
     
     // TODO: enable then draw walls
+    _environment_shader.use();
+    // Properties of the material the model is made out of (the "K" terms in the equations discussed in class)
+    // These values should make the model look like it is made out of a metal, like brass
+    vec3 ambientReflectionCoeff = vec3(0.4125, 0.275, 0.0375);
+    vec3 diffuseReflectionCoeff = vec3(0.78, 0.57, 0.11);
+    vec3 specularReflectionCoeff = vec3(0.99, 0.94, 0.80);
+    float specularExponent = 27.9;
+    
+    // Properties of the light source (the "I" terms in the equations discussed in class)
+    // These values are for a white light so the r,g,b intensities are all the same
+    vec3 ambientLightIntensity = vec3(0.4, 0.4, 0.4);
+    vec3 diffuseLightIntensity = vec3(0.6, 0.6, 0.6);
+    vec3 specularLightIntensity = vec3(1.0, 1.0, 1.0);
+    
+    _environment_shader.setUniform("ambientReflectionCoeff", ambientReflectionCoeff);
+    _environment_shader.setUniform("diffuseReflectionCoeff", diffuseReflectionCoeff);
+    _environment_shader.setUniform("specularReflectionCoeff", specularReflectionCoeff);
+    
+    _environment_shader.setUniform("specularExponent", specularExponent);
+    
+    _environment_shader.setUniform("ambientLightIntensity", ambientLightIntensity);
+    _environment_shader.setUniform("diffuseLightIntensity", diffuseLightIntensity);
+    _environment_shader.setUniform("specularLightIntensity", specularLightIntensity);
+    
+    _environment_shader.setUniform("view_mat", view);
+    _environment_shader.setUniform("projection_mat", projection);
+    
+    _environment_shader.setUniform("model_mat", mat4(1.0));
+    _environment_shader.setUniform("normal_mat", mat3(transpose(inverse(mat4(1.0)))));
+    _environment_shader.setUniform("eye_world", eye_world);
+    _environment_shader.setUniform("lightPosition", lightPosition);
     glEnable(GL_CULL_FACE);  // Use GL_frontfacing if needed
     _wallsMesh->draw(_shader);
+    
+    // Draw the skybox. Should be the last thing to draw
+    skyBox->draw(view, projection);
 }
 
 void App::drawText(const std::string text, float xPos, float yPos, GLfloat windowHeight, GLfloat windowWidth) {
@@ -324,7 +362,7 @@ void App::initWaterMesh(string waveType) {
 
 	_waterMesh.reset(new Mesh(textures, GL_TRIANGLES , GL_DYNAMIC_DRAW, cpuVertexByteSize, cpuIndexByteSize, 0, cpuVertexArray, cpuIndexArray.size(), cpuIndexByteSize, &cpuIndexArray[0]));
 
-	_waterMesh->setMaterialColor(vec4(0.0, 0.0, 1.0, 1.0));
+	//_waterMesh->setMaterialColor(vec4(0.0, 0.0, 1.0, 1.0));
 
 }
 
@@ -516,7 +554,7 @@ void App::initEnvironment() {
     Mesh::Vertex frontBottomLeft3;  // 17
     frontBottomLeft3.position = vec3(-_ENV_WIDTH /2.0f, -_ENV_HEIGHT /2.0f, _ENV_WIDTH /2.0f);
     frontBottomLeft3.normal = vec3(0, 1, 0);
-    frontBottomLeft3.texCoord0 = vec2(0.0, _ENV_HEIGHT);
+    frontBottomLeft3.texCoord0 = vec2(0.0, _ENV_WIDTH);
     cpuVertexArray.push_back(frontBottomLeft3);
     cpuIndexArray.push_back(17);
     
@@ -533,7 +571,7 @@ void App::initEnvironment() {
     Mesh::Vertex frontBottomRight3;  // 19
     frontBottomRight3.position = vec3(_ENV_WIDTH /2.0f, -_ENV_HEIGHT /2.0f, _ENV_WIDTH /2.0f);
     frontBottomRight3.normal = vec3(0, 1, 0);
-    frontBottomRight3.texCoord0 = vec2(_ENV_WIDTH, _ENV_HEIGHT);
+    frontBottomRight3.texCoord0 = vec2(_ENV_WIDTH, _ENV_WIDTH);
     cpuVertexArray.push_back(frontBottomRight3);
     cpuIndexArray.push_back(19);
     
@@ -543,7 +581,7 @@ void App::initEnvironment() {
 
     std::shared_ptr<Texture> tex;
     //tex = Texture::create2DTextureFromFile("C:\\Users\\mackz\\Downloads\\poolWall.jpg");
-    tex = Texture::create2DTextureFromFile("/Users/miril/COMP465/comp465-project-ooooo-water-pretty/resources/images/testTiles.jpg");
+    tex = Texture::create2DTextureFromFile("/Users/miril/COMP465/comp465-project-ooooo-water-pretty/resources/images/poolTile.jpg");
     tex->setTexParameteri(GL_TEXTURE_WRAP_S, GL_REPEAT);
     tex->setTexParameteri(GL_TEXTURE_WRAP_T, GL_REPEAT);
     tex->setTexParameteri(GL_TEXTURE_MIN_FILTER, GL_LINEAR);

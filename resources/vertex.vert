@@ -37,6 +37,8 @@ out vec4 interpSurfPosition;
 // the fragment program.
 out vec3 interpSurfNormal;
 
+out vec2 texCoord;
+
 
 void main(void) {
 
@@ -51,7 +53,7 @@ void main(void) {
 	// bit differently than points.
 	interpSurfNormal = mat3(transpose(inverse(model_mat))) * vertex_normal;
 
-
+    texCoord = vertex_texcoord;
 	// This is the last line of almost every vertex shader program.  We don't need this for our lighting
 	// calculations, but it is required by OpenGl.  Whereas a fragment program must output a color
 	// as its final result, a vertex program must output a vertex position that has been projected into the

@@ -48,6 +48,9 @@ set(extra_files
   README.md
   resources/vertex.vert
   resources/caustic.frag
+  resources/skybox.vert
+  resources/skybox.frag
+  resources/environment.frag
 )
 
 set_source_files_properties(${extra_files} PROPERTIES HEADER_FILE_ONLY TRUE)

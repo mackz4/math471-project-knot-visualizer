@@ -7,6 +7,7 @@
 // so they change for each pixel across the triangle:
 in vec4 interpSurfPosition; // position on the surface in world coordinates
 in vec3 interpSurfNormal; // normal in world coordinates
+in vec2 texCoord;
 
 uniform vec3 light_direction; // in world coordinates
 
