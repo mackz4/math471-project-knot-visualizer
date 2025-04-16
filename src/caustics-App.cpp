@@ -1,4 +1,5 @@
 #include "caustics-App.h"
+#include "Water.h"
 
 #define FONTSTASH_IMPLEMENTATION
 #include <fontstash.h>
@@ -9,6 +10,10 @@
 
 App::App(int argc, char** argv) : VRApp(argc, argv)
 {
+    //Test
+    Water water(argc, argv);
+    //water.solve();
+    //Endtest
 	_lastTime = 0.0;
 	_curFrameTime = 0.0;
 
@@ -158,7 +163,8 @@ void App::onRenderGraphicsContext(const VRGraphicsState &renderState) {
         // -Y (bottom)
         // +Z (front)
         // -Z (back)
-        string textureFiles[] = {"desert_evening_east.jpg", "desert_evening_west.jpg", "desert_evening_up.jpg", "desert_evening_down.jpg", "desert_evening_north.jpg", "desert_evening_south.jpg"};
+        //string textureFiles[] = {"desert_evening_east.jpg", "desert_evening_west.jpg", "desert_evening_up.jpg", "desert_evening_down.jpg", "desert_evening_north.jpg", "desert_evening_south.jpg"};
+        string textureFiles[] = { "skybox_px.jpg", "skybox_nx.jpg", "skybox_py.jpg", "skybox_ny.jpg", "skybox_pz.jpg", "skybox_nz.jpg" };
         environmentMap = Texture::createCubeMapFromFiles(textureFiles, true, 4);
         environmentMap->setTexParameteri(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         environmentMap->setTexParameteri(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -172,8 +178,8 @@ void App::onRenderGraphicsContext(const VRGraphicsState &renderState) {
         float radius = 10.0;
         lightPosition = vec4(-1.7*radius, 0.3*radius, -1.0*radius, 1.0);
         
-        //tex = Texture::create2DTextureFromFile("C:\\Users\\mackz\\Downloads\\poolWall.jpg");
-        _tex = Texture::create2DTextureFromFile("/Users/miril/COMP465/comp465-project-ooooo-water-pretty/resources/images/poolTile.jpg");
+        _tex = Texture::create2DTextureFromFile("C:\\Users\\mackz\\Downloads\\poolWall.jpg");
+        //_tex = Texture::create2DTextureFromFile("/Users/miril/COMP465/comp465-project-ooooo-water-pretty/resources/images/poolTile.jpg");
         _tex->setTexParameteri(GL_TEXTURE_WRAP_S, GL_REPEAT);
         _tex->setTexParameteri(GL_TEXTURE_WRAP_T, GL_REPEAT);
         _tex->setTexParameteri(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -372,9 +378,10 @@ void App::simpleZWater(std::vector<Mesh::Vertex> *cpuVertexArray, std::vector<in
     for (float z = -_ENV_WIDTH / 2.0; z < _ENV_WIDTH / 2.0; z += _TILE_SIZE) {
         for (float x = -_ENV_WIDTH / 2.0; x < _ENV_WIDTH / 2.0; x += _TILE_SIZE) {
             float amplitude = 1.0f;
+            float amplitude2 = 2.0f;
             float timeDis = _curFrameTime;
-            float y_coord1 = amplitude * glm::sin(z + timeDis) + _ENV_HEIGHT / 2.0f - amplitude;  // The y-coordinate is constant (for now)
-            float y_coord2 = amplitude * glm::sin(z + _TILE_SIZE + timeDis) + _ENV_HEIGHT / 2.0f - amplitude;
+            float y_coord1 = amplitude * glm::sin(z + timeDis) + _ENV_HEIGHT / 2.0f - amplitude2;  // The y-coordinate is constant (for now)
+            float y_coord2 = amplitude * glm::sin(z + _TILE_SIZE + timeDis) + _ENV_HEIGHT / 2.0f - amplitude2;
 
             Mesh::Vertex vert1;  // Top left
             vert1.position = vec3(x, y_coord1, z);
@@ -580,8 +587,8 @@ void App::initEnvironment() {
     const int cpuIndexByteSize = sizeof(int) * cpuIndexArray.size();
 
     std::shared_ptr<Texture> tex;
-    //tex = Texture::create2DTextureFromFile("C:\\Users\\mackz\\Downloads\\poolWall.jpg");
-    tex = Texture::create2DTextureFromFile("/Users/miril/COMP465/comp465-project-ooooo-water-pretty/resources/images/poolTile.jpg");
+    tex = Texture::create2DTextureFromFile("C:\\Users\\mackz\\Downloads\\poolWall.jpg");
+    //tex = Texture::create2DTextureFromFile("/Users/miril/COMP465/comp465-project-ooooo-water-pretty/resources/images/poolTile.jpg");
     tex->setTexParameteri(GL_TEXTURE_WRAP_S, GL_REPEAT);
     tex->setTexParameteri(GL_TEXTURE_WRAP_T, GL_REPEAT);
     tex->setTexParameteri(GL_TEXTURE_MIN_FILTER, GL_LINEAR);

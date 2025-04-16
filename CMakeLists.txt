@@ -37,11 +37,13 @@ set(source_files
   src/main.cpp
   src/caustics-App.cpp
   src/Skybox.cpp
+  src/Water.cpp
 )
 
 set(header_files
   src/caustics-App.h
   src/Skybox.h
+  src/Water.h
 )
 
 set(extra_files
