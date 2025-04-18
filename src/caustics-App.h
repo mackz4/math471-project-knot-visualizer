@@ -101,7 +101,7 @@ private:
 	GLSLProgram _textShader;
 
     //ComplexWaterVars
-    std::unique_ptr<Water> water_class = std::make_unique<Water>();
+    std::unique_ptr<WaterShallow> water_shallow = std::make_unique<WaterShallow>();
     int sim_timestep = 0;
     //EndComplexWaterVars
 };

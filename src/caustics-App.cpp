@@ -60,7 +60,7 @@ void App::onButtonDown(const VRButtonEvent &event) {
 	if (name == "MouseBtnLeft_Down") {
 		mouseDown = true;
     } else if (name == "Kbd1_Down") { // Initialize timesteps
-        water_class->init();
+        water_shallow->init();
     }
     else if (name == "Kbd2_Down") { // Increase timestep by 1
         sim_timestep++;
@@ -445,12 +445,12 @@ void App::complexWater(std::vector<Mesh::Vertex>* cpuVertexArray, std::vector<in
             float y_coord3;
             float y_coord4;
 
-            if (water_class->h_list[sim_timestep][xCounter][yCounter] != NULL) {
+            if (water_shallow->h_list[sim_timestep][xCounter][yCounter] != NULL) {
                 //std::cout << water_class->h_list[1][xCounter][yCounter] << std::endl;
-                y_coord1 = _ENV_HEIGHT / 2.0f - 2.0 + water_class->h_list[sim_timestep][xCounter][yCounter];
-                y_coord2 = _ENV_HEIGHT / 2.0f - 2.0 + water_class->h_list[sim_timestep][xCounter][yCounter + 1];
-                y_coord3 = _ENV_HEIGHT / 2.0f - 2.0 + water_class->h_list[sim_timestep][xCounter + 1][yCounter];
-                y_coord4 = _ENV_HEIGHT / 2.0f - 2.0 + water_class->h_list[sim_timestep][xCounter + 1][yCounter + 1];
+                y_coord1 = _ENV_HEIGHT / 2.0f - 2.0 + water_shallow->h_list[sim_timestep][xCounter][yCounter];
+                y_coord2 = _ENV_HEIGHT / 2.0f - 2.0 + water_shallow->h_list[sim_timestep][xCounter][yCounter + 1];
+                y_coord3 = _ENV_HEIGHT / 2.0f - 2.0 + water_shallow->h_list[sim_timestep][xCounter + 1][yCounter];
+                y_coord4 = _ENV_HEIGHT / 2.0f - 2.0 + water_shallow->h_list[sim_timestep][xCounter + 1][yCounter + 1];
             }
             else {
                 y_coord1 = _ENV_HEIGHT / 2.0f - 5.0;
