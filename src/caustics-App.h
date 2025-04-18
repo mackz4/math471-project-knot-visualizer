@@ -30,7 +30,9 @@ using namespace MinVR;
 #endif
 
 #include "Skybox.h"
+#include "Water.h"
 #include <BasicGraphics.h>
+#include <memory>
 using namespace basicgraphics;
 
 class App : public VRApp {
@@ -57,7 +59,7 @@ public:
     
 private:
     
-    const float _ENV_WIDTH = 24.0; // orig _ENV_WIDTH
+    const float _ENV_WIDTH = 23.0; // orig _ENV_WIDTH
     const float _ENV_HEIGHT = 14.0;
     const float _TILE_SIZE = 0.5f; // orig _TILE_WIDTH
     const glm::vec3 _LIGHT_DIRECTION = glm::normalize(glm::vec3(0.0f, -1.0f, 0.0f));
@@ -81,6 +83,7 @@ private:
     void initWaterMesh(string waveType);
     void initEnvironment();
     void simpleZWater(std::vector<Mesh::Vertex> *cpuVertexArray, std::vector<int> *cpuIndexArray);
+    void complexWater(std::vector<Mesh::Vertex>* cpuVertexArray, std::vector<int>* cpuIndexArray);
 
     glm::vec2 lastMousePos;
     glm::vec3 eye_world;
@@ -96,6 +99,11 @@ private:
 	void drawText(const std::string text, float xPos, float yPos, GLfloat windowHeight, GLfloat windowWidth);
 	struct FONScontext* fs;
 	GLSLProgram _textShader;
+
+    //ComplexWaterVars
+    std::unique_ptr<Water> water_class = std::make_unique<Water>();
+    int sim_timestep = 0;
+    //EndComplexWaterVars
 };
 
 
