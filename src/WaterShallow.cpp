@@ -37,13 +37,7 @@ void WaterShallow::init() {
 
     for (int i = 0; i < SIZE_X; i++) {
         for (int j = 0; j < SIZE_Y; j++) {
-            float calc = glm::exp((-glm::pow(x[i][j] - 0.2, 2) - glm::pow(y[i][j] - 0.2, 2)) / (2.0 * glm::pow(0.05, 2)));
-            if (calc > 0.001) {
-                h_init[i][j] = calc;
-            }
-            else {
-                h_init[i][j] = calc;
-            }
+            h_init[i][j] = glm::exp((-glm::pow(x[i][j] - 0.2, 2) - glm::pow(y[i][j] - 0.2, 2)) / (2.0 * glm::pow(0.05, 2)));
 
         }
     }

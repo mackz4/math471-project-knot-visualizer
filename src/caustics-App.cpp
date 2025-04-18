@@ -429,55 +429,109 @@ void App::simpleZWater(std::vector<Mesh::Vertex> *cpuVertexArray, std::vector<in
 }
 
 void App::complexWater(std::vector<Mesh::Vertex>* cpuVertexArray, std::vector<int>* cpuIndexArray) {
-    // Create the vertices
-    int counter = 0;
+    /*
+    
+    // Create array of vertex positions
+    vec3 vertex_positions[ENV_TILES_X + 1][ENV_TILES_Z + 1];
+    vec3 vertex_normals[ENV_TILES_X + 1][ENV_TILES_Z + 1];
 
+    float pos_x = -ENV_WIDTH_X / 2.0;
+    float pos_z = -ENV_WIDTH_Z / 2.0;
+    for (int i = 0; i < ENV_TILES_X + 1; i++) {
+        for (int j = 0; j < ENV_TILES_Z + 1; i++) {
+            float pos_y;
+            if (water_shallow->h_list[sim_timestep][i][j] != NULL) {
+                pos_y = _ENV_HEIGHT / 2.0f - _WATER_DEPTH + water_shallow->h_list[sim_timestep][i][j];
+
+            }
+            else { // fallback
+                pos_y = _ENV_HEIGHT / 2.0f - _WATER_DEPTH;
+            }
+
+            vertex_positions[i][j] = vec3(pos_x, pos_y, pos_z);
+        }
+    }
+
+    // Calculate vertex normals based off their positions
+    for (int i = 1; i < ENV_TILES_X; i++) {
+        for (int j = 1; j < ENV_TILES_Z; i++) {
+            vec3 pos_center_middle = vertex_positions[i][j];
+
+            vec3 pos_top_middle    = vertex_positions[i - 1][j    ];
+            vec3 pos_top_right     = vertex_positions[i - 1][j + 1];
+            vec3 pos_center_left   = vertex_positions[i    ][j - 1];
+            vec3 pos_center_right  = vertex_positions[i    ][j + 1];
+            vec3 pos_bottom_left   = vertex_positions[i + 1][j - 1];
+            vec3 pos_bottom_middle = vertex_positions[i + 1][j    ];
+
+            vec3 vec_top_middle = pos_top_middle - pos_center_middle;
+            vec3 vec_top_right = pos_top_right - pos_center_middle;
+            vec3 vec_center_left = pos_center_left - pos_center_middle;
+            vec3 vec_center_right = pos_center_right - pos_center_middle;
+            vec3 vec_bottom_left = pos_bottom_left - pos_center_middle;
+            vec3 vec_bottom_middle = pos_bottom_middle - pos_center_middle;
+
+            vertex_normals[i][j] = (normalize(cross(vec_top_middle, vec_center_left)) +
+                                    normalize(cross(vec_center_left, vec_bottom_left)) +
+                                    normalize(cross(vec_bottom_left, vec_bottom_middle)) +
+                                    normalize(cross(vec_bottom_middle, vec_center_right)) +
+                                    normalize(cross(vec_center_right, vec_top_right)) +
+                                    normalize(cross(vec_top_right, vec_top_middle))) / 6.0f;
+        }
+    }
+    
+    // Create mesh using positions, normals, and texture coordinates
+    for (int i = 1; i < ENV_TILES_X; i++) {
+        for (int j = 1; j < ENV_TILES_Z; i++) {
+
+        }
+    }
+
+    */
+
+    ////////
+    int counter = 0;
     int xCounter = 0;
     int yCounter = 0;
     for (float z = -_ENV_WIDTH / 2.0; z < _ENV_WIDTH / 2.0; z += _TILE_SIZE) {
         for (float x = -_ENV_WIDTH / 2.0; x < _ENV_WIDTH / 2.0; x += _TILE_SIZE) {
-            float amplitude = 1.0f;
-            float amplitude2 = 2.0f;
-            float timeDis = _curFrameTime;
-            float y_coord1;
-            float y_coord2;
-            float y_coord3;
-            float y_coord4;
+            float vert1_pos_y;
+            float vert2_pos_y;
+            float vert3_pos_y;
+            float vert4_pos_y;
 
             if (water_shallow->h_list[sim_timestep][xCounter][yCounter] != NULL) {
-                //std::cout << water_class->h_list[1][xCounter][yCounter] << std::endl;
-                y_coord1 = _ENV_HEIGHT / 2.0f - 2.0 + water_shallow->h_list[sim_timestep][xCounter][yCounter];
-                y_coord2 = _ENV_HEIGHT / 2.0f - 2.0 + water_shallow->h_list[sim_timestep][xCounter][yCounter + 1];
-                y_coord3 = _ENV_HEIGHT / 2.0f - 2.0 + water_shallow->h_list[sim_timestep][xCounter + 1][yCounter];
-                y_coord4 = _ENV_HEIGHT / 2.0f - 2.0 + water_shallow->h_list[sim_timestep][xCounter + 1][yCounter + 1];
+                vert1_pos_y = _ENV_HEIGHT / 2.0f - _WATER_DEPTH + water_shallow->h_list[sim_timestep][xCounter][yCounter];
+                vert2_pos_y = _ENV_HEIGHT / 2.0f - _WATER_DEPTH + water_shallow->h_list[sim_timestep][xCounter][yCounter + 1];
+                vert3_pos_y = _ENV_HEIGHT / 2.0f - _WATER_DEPTH + water_shallow->h_list[sim_timestep][xCounter + 1][yCounter];
+                vert4_pos_y = _ENV_HEIGHT / 2.0f - _WATER_DEPTH + water_shallow->h_list[sim_timestep][xCounter + 1][yCounter + 1];
             }
             else {
-                y_coord1 = _ENV_HEIGHT / 2.0f - 5.0;
-                y_coord2 = _ENV_HEIGHT / 2.0f - 5.0;
-                y_coord3 = _ENV_HEIGHT / 2.0f - 5.0;
-                y_coord4 = _ENV_HEIGHT / 2.0f - 5.0;
+                vert1_pos_y = _ENV_HEIGHT / 2.0f - _WATER_DEPTH;
+                vert2_pos_y = _ENV_HEIGHT / 2.0f - _WATER_DEPTH;
+                vert3_pos_y = _ENV_HEIGHT / 2.0f - _WATER_DEPTH;
+                vert4_pos_y = _ENV_HEIGHT / 2.0f - _WATER_DEPTH;
             }
 
-
             Mesh::Vertex vert1;  // Top left
-            vert1.position = vec3(x, y_coord1, z);
-            vert1.normal = normalize(vec3(0, glm::sin(z + timeDis), glm::cos(z + timeDis)));
+            vert1.position = vec3(x, vert1_pos_y, z);
+            vert1.normal = normalize(vec3(0, 0, 0));
             vert1.texCoord0 = vec2(0, 0);
             cpuVertexArray->push_back(vert1);
             cpuIndexArray->push_back(counter);
             counter++;
 
             Mesh::Vertex vert2;  // Bottom left
-            vert2.position = vec3(x, y_coord2, z + _TILE_SIZE);
-            vert2.normal = normalize(vec3(0, glm::sin(z + _TILE_SIZE + timeDis), glm::cos(z + _TILE_SIZE + timeDis)));
+            vert2.position = vec3(x, vert2_pos_y, z + _TILE_SIZE);
+            vert2.normal = normalize(vec3(0, 0, 0));
             vert2.texCoord0 = vec2(0, 0);
             cpuVertexArray->push_back(vert2);
             cpuIndexArray->push_back(counter);
             counter++;
 
             Mesh::Vertex vert3;  // Top Right
-            vert3.position = vec3(x + _TILE_SIZE, y_coord3, z);
-            vert3.normal = normalize(vec3(0, glm::sin(z + timeDis), glm::cos(z + timeDis)));
+            vert3.position = vec3(x + _TILE_SIZE, vert3_pos_y, z);
+            vert3.normal = normalize(vec3(0, 0, 0));
             vert3.texCoord0 = vec2(0, 0);
             cpuVertexArray->push_back(vert3);
             cpuIndexArray->push_back(counter);
@@ -487,8 +541,8 @@ void App::complexWater(std::vector<Mesh::Vertex>* cpuVertexArray, std::vector<in
             cpuIndexArray->push_back(counter - 2); // Dupe the previous vertex
 
             Mesh::Vertex vert4;  // Bottom right
-            vert4.position = vec3(x + _TILE_SIZE, y_coord4, z + _TILE_SIZE);
-            vert4.normal = normalize(vec3(0, glm::sin(z + _TILE_SIZE + timeDis), glm::cos(z + _TILE_SIZE + timeDis)));
+            vert4.position = vec3(x + _TILE_SIZE, vert4_pos_y, z + _TILE_SIZE);
+            vert4.normal = normalize(vec3(0, 0, 0));
             vert4.texCoord0 = vec2(0, 0);
             cpuVertexArray->push_back(vert4);
             cpuIndexArray->push_back(counter);

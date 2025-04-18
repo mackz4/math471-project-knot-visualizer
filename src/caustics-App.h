@@ -33,6 +33,15 @@ using namespace MinVR;
 #include "WaterShallow.h"
 #include <BasicGraphics.h>
 #include <memory>
+
+// CONSTANTS
+#define ENV_TILES_X 23
+#define ENV_TILES_Z 23
+#define ENV_TILE_LEN_X 0.5f
+#define ENV_TILE_LEN_Z 0.5f
+#define ENV_WIDTH_X (ENV_TILES_X * ENV_TILE_LEN_X)
+#define ENV_WIDTH_Z (ENV_TILES_Z * ENV_TILE_LEN_Z)
+
 using namespace basicgraphics;
 
 class App : public VRApp {
@@ -58,10 +67,12 @@ public:
     
     
 private:
-    
     const float _ENV_WIDTH = 23.0; // orig _ENV_WIDTH
     const float _ENV_HEIGHT = 14.0;
     const float _TILE_SIZE = 0.5f; // orig _TILE_WIDTH
+    const float _WATER_DEPTH = 2.0f;
+
+
     const glm::vec3 _LIGHT_DIRECTION = glm::normalize(glm::vec3(0.0f, -1.0f, 0.0f));
     
 
