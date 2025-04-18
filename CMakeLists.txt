@@ -9,7 +9,7 @@ message(STATUS "prefix path: ${CMAKE_PREFIX_PATH}")
 # Using 3.9 to get a modern version of FindOpenGL.cmake
 cmake_minimum_required (VERSION 3.10) 
 
-set (CMAKE_CXX_STANDARD 11)
+set (CMAKE_CXX_STANDARD 14)
 
 # Dependencies that are auto-downloaded, built, and installed for you will go here.  So, you 
 # may use this even if not planning to install this particular project on your system.

@@ -180,8 +180,7 @@ void App::onRenderGraphicsContext(const VRGraphicsState &renderState) {
         float radius = 10.0;
         lightPosition = vec4(-1.7*radius, 0.3*radius, -1.0*radius, 1.0);
         
-        _tex = Texture::create2DTextureFromFile("C:\\Users\\mackz\\Downloads\\poolWall.jpg");
-        //_tex = Texture::create2DTextureFromFile("/Users/miril/COMP465/comp465-project-ooooo-water-pretty/resources/images/poolTile.jpg");
+        _tex = Texture::create2DTextureFromFile("images/poolTile.jpg");
         _tex->setTexParameteri(GL_TEXTURE_WRAP_S, GL_REPEAT);
         _tex->setTexParameteri(GL_TEXTURE_WRAP_T, GL_REPEAT);
         _tex->setTexParameteri(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -667,8 +666,7 @@ void App::initEnvironment() {
     const int cpuIndexByteSize = sizeof(int) * cpuIndexArray.size();
 
     std::shared_ptr<Texture> tex;
-    tex = Texture::create2DTextureFromFile("C:\\Users\\mackz\\Downloads\\poolWall.jpg");
-    //tex = Texture::create2DTextureFromFile("/Users/miril/COMP465/comp465-project-ooooo-water-pretty/resources/images/poolTile.jpg");
+    tex = Texture::create2DTextureFromFile("images/poolTile.jpg");
     tex->setTexParameteri(GL_TEXTURE_WRAP_S, GL_REPEAT);
     tex->setTexParameteri(GL_TEXTURE_WRAP_T, GL_REPEAT);
     tex->setTexParameteri(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
