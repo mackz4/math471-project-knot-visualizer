@@ -165,7 +165,8 @@ void App::onRenderGraphicsContext(const VRGraphicsState &renderState) {
         // +Z (front)
         // -Z (back)
         //string textureFiles[] = {"desert_evening_east.jpg", "desert_evening_west.jpg", "desert_evening_up.jpg", "desert_evening_down.jpg", "desert_evening_north.jpg", "desert_evening_south.jpg"};
-        string textureFiles[] = { "skybox_px.jpg", "skybox_nx.jpg", "skybox_py.jpg", "skybox_ny.jpg", "skybox_pz.jpg", "skybox_nz.jpg" };
+        //string textureFiles[] = { "skybox_px.jpg", "skybox_nx.jpg", "skybox_py.jpg", "skybox_ny.jpg", "skybox_pz.jpg", "skybox_nz.jpg" };
+        string textureFiles[] = { "partcloudy_px.jpg", "partcloudy_nx.jpg", "partcloudy_py.jpg", "partcloudy_ny.jpg", "partcloudy_pz.jpg", "partcloudy_nz.jpg" };
         environmentMap = Texture::createCubeMapFromFiles(textureFiles, true, 4);
         environmentMap->setTexParameteri(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         environmentMap->setTexParameteri(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);

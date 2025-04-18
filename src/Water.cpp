@@ -21,7 +21,7 @@ void Water::init() {
 
     linspace(xs, 0.0f, 1.0f, SIZE_X);
     linspace(ys, 0.0f, 1.0f, SIZE_Y);
-    linspace(ts, 0.0f, 0.50f, TIMESTEPS); // tinker with value for "stop" and "TIMESTEPS" and the waves will stabalize instead of going crazy. 
+    linspace(ts, 0.0f, 0.6f, TIMESTEPS); // tinker with value for "stop" and "TIMESTEPS" and the waves will stabalize instead of going crazy. 
                                           // in this instance, set to around "0.5f" and it will stabalize
 
     dx = xs[1] - xs[0];
