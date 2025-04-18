@@ -7,10 +7,10 @@
 #define SIZE_Y 47
 #define TIMESTEPS 60
 
-class Water
+class WaterShallow
 {
 public:
-    Water();
+    WaterShallow();
     void init();
 
     float h_list[TIMESTEPS][SIZE_X][SIZE_Y];

@@ -1,5 +1,5 @@
 #include "caustics-App.h"
-#include "Water.h"
+#include "WaterShallow.h"
 
 #define FONTSTASH_IMPLEMENTATION
 #include <fontstash.h>

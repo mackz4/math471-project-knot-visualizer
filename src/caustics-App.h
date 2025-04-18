@@ -30,7 +30,7 @@ using namespace MinVR;
 #endif
 
 #include "Skybox.h"
-#include "Water.h"
+#include "WaterShallow.h"
 #include <BasicGraphics.h>
 #include <memory>
 using namespace basicgraphics;

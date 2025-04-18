@@ -1,19 +1,19 @@
 ﻿/*
-    Water.cpp implementation based off: https://github.com/hongkangcarl/PDE-solver-shallow-water-equations/blob/main/swe.py
+    WaterShallow.cpp implementation based off: https://github.com/hongkangcarl/PDE-solver-shallow-water-equations/blob/main/swe.py
 */
 
-#include "Water.h"
+#include "WaterShallow.h"
 #include <iostream>
 #include <vector>
 #include <algorithm>
 #include <string>
 
-Water::Water()
+WaterShallow::WaterShallow()
 {
 
 }
 
-void Water::init() {  
+void WaterShallow::init() {
     int timestep_curr = 0;
     b = 10.0f;   // friction coefficient
     g = 1.0f;    // gravity acceleration
@@ -156,7 +156,7 @@ void Water::init() {
     
 }
 
-void Water::linspace(float* arr, float start, float stop, int num) {
+void WaterShallow::linspace(float* arr, float start, float stop, int num) {
     float step = (stop - start) / (float)num;
 
     int index = 0;
@@ -165,7 +165,7 @@ void Water::linspace(float* arr, float start, float stop, int num) {
     }
 }
 
-void Water::meshgrid(float x[SIZE_X][SIZE_Y], float y[SIZE_X][SIZE_Y], float* xs, float* ys) { 
+void WaterShallow::meshgrid(float x[SIZE_X][SIZE_Y], float y[SIZE_X][SIZE_Y], float* xs, float* ys) {
     for (int i = 0; i < SIZE_X; i++) {
         for (int j = 0; j < SIZE_Y; j++) {
             x[i][j] = xs[j];
@@ -174,7 +174,7 @@ void Water::meshgrid(float x[SIZE_X][SIZE_Y], float y[SIZE_X][SIZE_Y], float* xs
     }
 }
 
-void Water::grad(float h_list_last_grad0[SIZE_X][SIZE_Y], float h_list_last_grad1[SIZE_X][SIZE_Y], float h_list_last[SIZE_X][SIZE_Y], float dx, float dy) {
+void WaterShallow::grad(float h_list_last_grad0[SIZE_X][SIZE_Y], float h_list_last_grad1[SIZE_X][SIZE_Y], float h_list_last[SIZE_X][SIZE_Y], float dx, float dy) {
     // GRAD H X
     float np_roll_neg1_0[SIZE_X][SIZE_Y];
     for (int i = 0; i < SIZE_X; i++) {
@@ -248,7 +248,7 @@ void Water::grad(float h_list_last_grad0[SIZE_X][SIZE_Y], float h_list_last_grad
     }
 }
 
-void Water::div(float v_div[SIZE_X][SIZE_Y], float v0[SIZE_X][SIZE_Y], float v1[SIZE_X][SIZE_Y]) {
+void WaterShallow::div(float v_div[SIZE_X][SIZE_Y], float v0[SIZE_X][SIZE_Y], float v1[SIZE_X][SIZE_Y]) {
     float output0[SIZE_X][SIZE_Y];
     float output1[SIZE_X][SIZE_Y];
 
@@ -297,7 +297,7 @@ void Water::div(float v_div[SIZE_X][SIZE_Y], float v0[SIZE_X][SIZE_Y], float v1[
     }
 }
 
-void Water::add_a_drop(float h) {
+void WaterShallow::add_a_drop(float h) {
 
 
 }
