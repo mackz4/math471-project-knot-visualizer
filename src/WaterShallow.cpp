@@ -21,12 +21,10 @@ void WaterShallow::init() {
 
     linspace(xs, 0.0f, 1.0f, SIZE_X);
     linspace(ys, 0.0f, 1.0f, SIZE_Y);
-    linspace(ts, 0.0f, 0.6f, TIMESTEPS); // tinker with value for "stop" and "TIMESTEPS" and the waves will stabalize instead of going crazy. 
-                                          // in this instance, set to around "0.5f" and it will stabalize
 
     dx = xs[1] - xs[0];
     dy = ys[1] - ys[0];
-    dt = ts[1] - ts[0];
+    dt = 0.0006;
 
     meshgrid(x, y, xs, ys);
 
@@ -37,8 +35,8 @@ void WaterShallow::init() {
 
     for (int i = 0; i < SIZE_X; i++) {
         for (int j = 0; j < SIZE_Y; j++) {
-            h_init[i][j] = glm::exp((-glm::pow(x[i][j] - 0.2, 2) - glm::pow(y[i][j] - 0.2, 2)) / (2.0 * glm::pow(0.05, 2)));
-
+            //h_init[i][j] = glm::exp((-glm::pow(x[i][j] - 0.2, 2) - glm::pow(y[i][j] - 0.2, 2)) / (2.0 * glm::pow(0.05, 2)));
+            h_init[i][j] = 5.0 * glm::exp((-glm::pow(x[i][j] - 0.2, 2) - glm::pow(y[i][j] - 0.2, 2)) / (2.0 * glm::pow(0.05, 2)));
         }
     }
 
@@ -52,106 +50,90 @@ void WaterShallow::init() {
     // store the initial condition into the lists
     for (int i = 0; i < SIZE_X; i++) {
         for (int j = 0; j < SIZE_Y; j++) {
-            h_list[0][i][j] = h_init[i][j];
-            v0_list[0][i][j] = v0_init[i][j];
-            v1_list[0][i][j] = v1_init[i][j];
+            h_list[i][j] = h_init[i][j];
+            v0_list[i][j] = v0_init[i][j];
+            v1_list[i][j] = v1_init[i][j];
         }
     }
-
-    // start the simulation, for loop over the descritized time
-    for (int i = 1; i < TIMESTEPS; i++) {
-        // calculate the velocities based on the current h(x, y, t)
-        float v0[SIZE_X][SIZE_Y];
-        float v1[SIZE_X][SIZE_Y];
-        for (int j = 0; j < SIZE_X; j++) {
-            for (int k = 0; k < SIZE_Y; k++) {
-                v0[j][k] = 0.0f;
-                v1[j][k] = 0.0f;
-            }
-        }
-
-        float h_list_last[SIZE_X][SIZE_Y];
-        for (int j = 0; j < SIZE_X; j++) {
-            for (int k = 0; k < SIZE_Y; k++) {
-                h_list_last[j][k] = h_list[timestep_curr][j][k];
-            }
-        }
-        float h_list_last_grad0[SIZE_X][SIZE_Y];
-        float h_list_last_grad1[SIZE_X][SIZE_Y];
-
-        grad(h_list_last_grad0, h_list_last_grad1, h_list_last, dx, dy);
-        for (int j = 0; j < SIZE_X; j++) {
-            for (int k = 0; k < SIZE_Y; k++) {
-                v0[j][k] = (1.0f - dt * b) * v0_list[timestep_curr][j][k] - dt * g * h_list_last_grad0[j][k];
-                v1[j][k] = (1.0f - dt * b) * v1_list[timestep_curr][j][k] - dt * g * h_list_last_grad1[j][k];
-            }
-        }
-
-        // calculate the next - step h(x, y, t + ∆t) based on the velocities
-        float h[SIZE_X][SIZE_Y];
-        float v_div[SIZE_X][SIZE_Y];
-
-        div(v_div, v0, v1);
-        for (int j = 0; j < SIZE_X; j++) {
-            for (int k = 0; k < SIZE_Y; k++) {
-                h[j][k] = h_list[timestep_curr][j][k] - dt * H * v_div[j][k];
-            }
-        }
-
-
-        float h_copy[SIZE_X][SIZE_Y];
-        for (int j = 0; j < SIZE_X; j++) {
-            for (int k = 0; k < SIZE_Y; k++) {
-                h_copy[j][k] = h[j][k];
-            }
-        }
-        // h[0, :] = h[1, :]
-        for (int j = 0; j < SIZE_Y; j++) {
-            h_copy[0][j] = h_copy[1][j];
-        }
-
-        // h[-1, :] = h[-2, :]
-        for (int j = 0; j < SIZE_Y; j++) {
-            h_copy[SIZE_X - 1][j] = h_copy[SIZE_X - 2][j];
-        }
-
-        // h[:, 0] = h[:, 1]
-        for (int j = 0; j < SIZE_X; j++) {
-            h_copy[j][0] = h_copy[j][1];
-        }
-
-        // h[:, -1] = h[:, -2]
-        for (int j = 0; j < SIZE_X; j++) {
-            h_copy[j][SIZE_Y - 1] = h_copy[j][SIZE_Y - 2];
-        }
-        
-        // store the numerical results into the lists
-        timestep_curr++;
-        for (int j = 0; j < SIZE_X; j++) {
-            for (int k = 0; k < SIZE_Y; k++) {
-                h_list[timestep_curr][j][k] = h_copy[j][k];
-            }
-        }
-        for (int j = 0; j < SIZE_X; j++) {
-            for (int k = 0; k < SIZE_Y; k++) {
-                v0_list[timestep_curr][j][k] = v0[j][k];
-                v1_list[timestep_curr][j][k] = v1[j][k];
-            }
-        }
-    }
-
-    // PRINTING TEST
-    for (int j = 0; j < SIZE_X; j++) {
-        for (int k = 0; k < SIZE_Y; k++) {
-            //std::cout << h_list[3][j][k] << std::endl;
-        }
-    }
-    //std::cout << "DONE!" << std::endl;
-    
 }
 
-void WaterShallow::solve(float sim_timestep) {
+void WaterShallow::solve() {
+    float v0[SIZE_X][SIZE_Y];
+    float v1[SIZE_X][SIZE_Y];
+    for (int j = 0; j < SIZE_X; j++) {
+        for (int k = 0; k < SIZE_Y; k++) {
+            v0[j][k] = 0.0f;
+            v1[j][k] = 0.0f;
+        }
+    }
 
+    float h_list_last[SIZE_X][SIZE_Y];
+    for (int j = 0; j < SIZE_X; j++) {
+        for (int k = 0; k < SIZE_Y; k++) {
+            h_list_last[j][k] = h_list[j][k];
+        }
+    }
+    float h_list_last_grad0[SIZE_X][SIZE_Y];
+    float h_list_last_grad1[SIZE_X][SIZE_Y];
+
+    grad(h_list_last_grad0, h_list_last_grad1, h_list_last, dx, dy);
+    for (int j = 0; j < SIZE_X; j++) {
+        for (int k = 0; k < SIZE_Y; k++) {
+            v0[j][k] = (1.0f - dt * b) * v0_list[j][k] - dt * g * h_list_last_grad0[j][k];
+            v1[j][k] = (1.0f - dt * b) * v1_list[j][k] - dt * g * h_list_last_grad1[j][k];
+        }
+    }
+
+    // calculate the next - step h(x, y, t + ∆t) based on the velocities
+    float h[SIZE_X][SIZE_Y];
+    float v_div[SIZE_X][SIZE_Y];
+
+    div(v_div, v0, v1);
+    for (int j = 0; j < SIZE_X; j++) {
+        for (int k = 0; k < SIZE_Y; k++) {
+            h[j][k] = h_list[j][k] - dt * H * v_div[j][k];
+        }
+    }
+
+
+    float h_copy[SIZE_X][SIZE_Y];
+    for (int j = 0; j < SIZE_X; j++) {
+        for (int k = 0; k < SIZE_Y; k++) {
+            h_copy[j][k] = h[j][k];
+        }
+    }
+    // h[0, :] = h[1, :]
+    for (int j = 0; j < SIZE_Y; j++) {
+        h_copy[0][j] = h_copy[1][j];
+    }
+
+    // h[-1, :] = h[-2, :]
+    for (int j = 0; j < SIZE_Y; j++) {
+        h_copy[SIZE_X - 1][j] = h_copy[SIZE_X - 2][j];
+    }
+
+    // h[:, 0] = h[:, 1]
+    for (int j = 0; j < SIZE_X; j++) {
+        h_copy[j][0] = h_copy[j][1];
+    }
+
+    // h[:, -1] = h[:, -2]
+    for (int j = 0; j < SIZE_X; j++) {
+        h_copy[j][SIZE_Y - 1] = h_copy[j][SIZE_Y - 2];
+    }
+
+    // store the numerical results into the lists
+    for (int j = 0; j < SIZE_X; j++) {
+        for (int k = 0; k < SIZE_Y; k++) {
+            h_list[j][k] = h_copy[j][k];
+        }
+    }
+    for (int j = 0; j < SIZE_X; j++) {
+        for (int k = 0; k < SIZE_Y; k++) {
+            v0_list[j][k] = v0[j][k];
+            v1_list[j][k] = v1[j][k];
+        }
+    }
 }
 
 void WaterShallow::linspace(float* arr, float start, float stop, int num) {

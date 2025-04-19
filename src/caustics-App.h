@@ -35,10 +35,10 @@ using namespace MinVR;
 #include <memory>
 
 // CONSTANTS
-#define ENV_TILES_X 23
-#define ENV_TILES_Z 23
-#define ENV_TILE_LEN_X 1.0f
-#define ENV_TILE_LEN_Z 1.0f
+#define ENV_TILES_X 48
+#define ENV_TILES_Z 48
+#define ENV_TILE_LEN_X 0.5f
+#define ENV_TILE_LEN_Z 0.5f
 #define ENV_WIDTH_X (ENV_TILES_X * ENV_TILE_LEN_X)
 #define ENV_WIDTH_Z (ENV_TILES_Z * ENV_TILE_LEN_Z)
 
@@ -67,7 +67,7 @@ public:
     
     
 private:
-    const float _ENV_WIDTH = 23.0; // orig _ENV_WIDTH
+    const float _ENV_WIDTH = 24.0; // orig _ENV_WIDTH
     const float _ENV_HEIGHT = 14.0;
     const float _TILE_SIZE = 0.5f; // orig _TILE_WIDTH
     const float _WATER_DEPTH = 2.0f;
@@ -114,7 +114,7 @@ private:
 
     //ComplexWaterVars
     std::unique_ptr<WaterShallow> water_shallow = std::make_unique<WaterShallow>();
-    int simulation_sol_time = 0;
+    int simulation_sol_time = -1;
     bool is_simulation_paused = false;
     //EndComplexWaterVars
 };

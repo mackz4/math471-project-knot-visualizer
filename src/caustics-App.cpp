@@ -29,6 +29,9 @@ App::App(int argc, char** argv) : VRApp(argc, argv)
     }
 
 	mouseDown = false;
+
+    water_shallow->init();
+    simulation_sol_time++;
 }
 
 App::~App()
@@ -69,7 +72,9 @@ void App::onButtonDown(const VRButtonEvent &event) {
 		mouseDown = true;
     }
     else if (name == "KbdF1_Down") {
-        simulation_sol_time = 0;
+        simulation_sol_time = -1;
+        water_shallow->init();
+        simulation_sol_time++;
     }
     else if (name == "KbdF2_Down") {
         is_simulation_paused = !is_simulation_paused;
@@ -78,9 +83,8 @@ void App::onButtonDown(const VRButtonEvent &event) {
         if (is_simulation_paused == false) {
             is_simulation_paused = true;
         } 
-        if (simulation_sol_time < TIMESTEPS - 1) {
-            simulation_sol_time++;
-        }
+        water_shallow->solve();
+        simulation_sol_time++;
     }
 }
 
@@ -306,7 +310,7 @@ void App::onRenderGraphicsScene(const VRGraphicsState &renderState) {
     double deltaTime = _curFrameTime - _lastTime;
     std::string fps = "FPS: " + std::to_string(1.0 / deltaTime);
     drawText(fps, 10, 10, windowHeight, windowWidth);
-    std::string sim_timestep_text = "Solution time: " + std::to_string(simulation_sol_time) + " / " + std::to_string(TIMESTEPS - 1);
+    std::string sim_timestep_text = "Solution time: " + std::to_string(simulation_sol_time);
     drawText(sim_timestep_text, 10, 30, windowHeight, windowWidth);
     //std::string theta_text = "Theta: " + std::to_string(glm::degrees(currTheta));
     //drawText(theta_text, 10, 50, windowHeight, windowWidth);
@@ -463,15 +467,9 @@ void App::simpleZWater(std::vector<Mesh::Vertex> *cpuVertexArray, std::vector<in
 }
 
 void App::complexWater(std::vector<Mesh::Vertex>* cpuVertexArray, std::vector<int>* cpuIndexArray) {
-    // Initialize WaterShallow class variables
-    if (is_simulation_paused == false) {
-        if (simulation_sol_time == 0) {
-            water_shallow->init();
-            simulation_sol_time++;
-        }
-        else if (simulation_sol_time < TIMESTEPS - 1) {
-            water_shallow->solve(simulation_sol_time++);
-        }
+    if (is_simulation_paused == false && simulation_sol_time != -1) { // simulation not paused
+        water_shallow->solve();
+        simulation_sol_time++;
     }
 
     // Create array of vertex positions
@@ -483,8 +481,8 @@ void App::complexWater(std::vector<Mesh::Vertex>* cpuVertexArray, std::vector<in
     for (int i = 0; i < ENV_TILES_X + 1; i++) {
         for (int j = 0; j < ENV_TILES_Z + 1; j++) {
             float pos_y;
-            if (water_shallow->h_list[simulation_sol_time][i][j] != NULL) {
-                pos_y = _ENV_HEIGHT / 2.0f - _WATER_DEPTH + water_shallow->h_list[simulation_sol_time][i][j];
+            if (water_shallow->h_list[i][j] != NULL) {
+                pos_y = _ENV_HEIGHT / 2.0f - _WATER_DEPTH + water_shallow->h_list[i][j];
 
             }
             else { // fallback

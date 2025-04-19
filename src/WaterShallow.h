@@ -3,18 +3,19 @@
 
 #include <glm/glm.hpp>
 
-#define SIZE_X 47
-#define SIZE_Y 47
-#define TIMESTEPS 1024
+#define SIZE_X 49
+#define SIZE_Y 49
 
 class WaterShallow
 {
 public:
     WaterShallow();
     void init();
-    void solve(float sim_timestep);
+    void solve();
 
-    float h_list[TIMESTEPS][SIZE_X][SIZE_Y];
+    float h_list[SIZE_X][SIZE_Y];
+    float v0_list[SIZE_X][SIZE_Y];
+    float v1_list[SIZE_X][SIZE_Y];
 private:
     float b;
     float g;
@@ -22,7 +23,6 @@ private:
 
     float xs[SIZE_X];
     float ys[SIZE_Y];
-    float ts[TIMESTEPS];
 
     float dx;
     float dy;
@@ -30,9 +30,6 @@ private:
 
     float x[SIZE_X][SIZE_Y];
     float y[SIZE_X][SIZE_Y];
-
-    float v0_list[TIMESTEPS][SIZE_X][SIZE_Y];
-    float v1_list[TIMESTEPS][SIZE_X][SIZE_Y];
 
     void linspace(float* arr, float start, float stop, int num);
     void meshgrid(float x[SIZE_X][SIZE_Y], float y[SIZE_X][SIZE_Y], float* xs, float* ys);
