@@ -15,12 +15,20 @@ App::App(int argc, char** argv) : VRApp(argc, argv)
 
 	currTheta = glm::radians(0.0);
 	currPhi = glm::radians(0.0);
-	eye_world = angleToSpherePoint(currTheta, currPhi);
 
-	up_vector = vec3(0, 0, 1);
+    eye_world = angleToSpherePoint(currTheta, currPhi);
+    vec3 look_vector = -normalize(eye_world);
+    if (glm::degrees(currPhi) == 0.0) {
+        up_vector = vec3(-cos(currTheta), 0.0, -sin(currTheta));
+    }
+    else if (glm::degrees(currPhi) == 180.0) {
+        up_vector = vec3(cos(currTheta), 0.0, sin(currTheta));
+    } else {
+        vec3 right_vector = normalize(cross(look_vector, vec3(0.0, 1.0, 0.0)));
+        up_vector = normalize(cross(right_vector, look_vector));
+    }
 
 	mouseDown = false;
-
 }
 
 App::~App()
@@ -94,18 +102,25 @@ void App::onCursorMove(const VRCursorEvent &event) {
 	if (mouseDown) {
 		vec2 dxy = vec2(event.getPos()[0], event.getPos()[1]) - lastMousePos;
 
-		float theta = glm::atan(dxy.x * _CAMERA_SENSITIVITY, _CAMERA_RADIUS);
-		float phi = glm::atan(dxy.y * _CAMERA_SENSITIVITY, _CAMERA_RADIUS);
-		currTheta -= theta;
-		currPhi += phi;
+		float changeTheta = glm::atan(dxy.x * _CAMERA_SENSITIVITY, _CAMERA_RADIUS);
+		float changePhi = glm::atan(-dxy.y * _CAMERA_SENSITIVITY, _CAMERA_RADIUS);
+		currTheta += changeTheta;
+		currPhi += changePhi;
         
-        currPhi = glm::clamp(currPhi, glm::radians(-180.0f), glm::radians(0.0f));
+        currPhi = glm::clamp(currPhi, glm::radians(0.0f), glm::radians(180.0f));
 
-		eye_world = angleToSpherePoint(currTheta, currPhi);
-		mat4 rotationX = glm::rotate(mat4(1.0), theta, vec3(0.0, 1.0, 0.0));
-		mat4 rotationY = glm::rotate(mat4(1.0), phi, vec3(1.0, 0.0, 0.0));
-		up_vector = rotationY * rotationX * vec4(up_vector, 0.0);
-		
+        eye_world = angleToSpherePoint(currTheta, currPhi);
+        vec3 look_vector = -normalize(eye_world);
+        if (glm::degrees(currPhi) == 0.0) {
+            up_vector = vec3(-cos(currTheta), 0.0, -sin(currTheta));
+        }
+        else if (glm::degrees(currPhi) == 180.0) {
+            up_vector = vec3(cos(currTheta), 0.0, sin(currTheta));
+        }
+        else {
+            vec3 right_vector = normalize(cross(look_vector, vec3(0.0, 1.0, 0.0)));
+            up_vector = normalize(cross(right_vector, look_vector));
+        }
 	}
 	lastMousePos = vec2(event.getPos()[0], event.getPos()[1]);
 }
@@ -293,6 +308,10 @@ void App::onRenderGraphicsScene(const VRGraphicsState &renderState) {
     drawText(fps, 10, 10, windowHeight, windowWidth);
     std::string sim_timestep_text = "Solution time: " + std::to_string(simulation_sol_time) + " / " + std::to_string(TIMESTEPS - 1);
     drawText(sim_timestep_text, 10, 30, windowHeight, windowWidth);
+    //std::string theta_text = "Theta: " + std::to_string(glm::degrees(currTheta));
+    //drawText(theta_text, 10, 50, windowHeight, windowWidth);
+    //std::string phi_text = "Phi: " + std::to_string(glm::degrees(currPhi));
+    //drawText(phi_text, 10, 70, windowHeight, windowWidth);
 }
 
 void App::drawText(const std::string text, float xPos, float yPos, GLfloat windowHeight, GLfloat windowWidth) {
@@ -356,9 +375,13 @@ void App::initializeText() {
 }
 
 vec3 App::angleToSpherePoint(float theta, float phi) {
-	float x = _CAMERA_RADIUS * sin(phi) * sin(theta);
-	float y = _CAMERA_RADIUS * cos(phi);
-	float z = _CAMERA_RADIUS * sin(phi) * cos(theta);
+	//float x = _CAMERA_RADIUS * sin(phi) * sin(theta);
+	//float y = _CAMERA_RADIUS * cos(phi);
+	//float z = _CAMERA_RADIUS * sin(phi) * cos(theta);
+    float x = _CAMERA_RADIUS * sin(phi) * cos(theta);
+    float y = _CAMERA_RADIUS * cos(phi);
+    float z = _CAMERA_RADIUS * sin(phi) * sin(theta);
+
 	//std::cout << theta << " " << phi << std::endl;
 	//
 	//std::cout << x << " " << y << " " << z << std::endl;
