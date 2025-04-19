@@ -55,12 +55,25 @@ void App::onButtonDown(const VRButtonEvent &event) {
     }
 	*/
 
-	std::cout << "ButtonDown: " << event.getName() << std::endl;
+	//std::cout << "ButtonDown: " << event.getName() << std::endl;
 	string name = event.getName();
 	if (name == "MouseBtnLeft_Down") {
 		mouseDown = true;
     }
-
+    else if (name == "KbdF1_Down") {
+        simulation_sol_time = 0;
+    }
+    else if (name == "KbdF2_Down") {
+        is_simulation_paused = !is_simulation_paused;
+    }
+    else if (name == "KbdF3_Down") {
+        if (is_simulation_paused == false) {
+            is_simulation_paused = true;
+        } 
+        if (simulation_sol_time < TIMESTEPS - 1) {
+            simulation_sol_time++;
+        }
+    }
 }
 
 void App::onButtonUp(const VRButtonEvent &event) {
@@ -81,12 +94,12 @@ void App::onCursorMove(const VRCursorEvent &event) {
 	if (mouseDown) {
 		vec2 dxy = vec2(event.getPos()[0], event.getPos()[1]) - lastMousePos;
 
-		float theta = glm::atan(dxy.x / 10.0f, _CAMERA_RADIUS);
-		float phi = glm::atan(dxy.y / 10.0f, _CAMERA_RADIUS);
+		float theta = glm::atan(dxy.x * _CAMERA_SENSITIVITY, _CAMERA_RADIUS);
+		float phi = glm::atan(dxy.y * _CAMERA_SENSITIVITY, _CAMERA_RADIUS);
 		currTheta -= theta;
 		currPhi += phi;
         
-        currPhi = glm::clamp(currPhi, glm::radians(-90.0f), glm::radians(90.0f));
+        currPhi = glm::clamp(currPhi, glm::radians(-180.0f), glm::radians(0.0f));
 
 		eye_world = angleToSpherePoint(currTheta, currPhi);
 		mat4 rotationX = glm::rotate(mat4(1.0), theta, vec3(0.0, 1.0, 0.0));
@@ -232,10 +245,6 @@ void App::onRenderGraphicsScene(const VRGraphicsState &renderState) {
     
     _shader.setUniform("glassR0", glassR0);
     _shader.setUniform("glassEta", glassEta);
-	
-	double deltaTime = _curFrameTime - _lastTime;
-	std::string fps = "FPS: " + std::to_string(1.0/deltaTime);
-	drawText(fps, 10, 10, windowHeight, windowWidth);
     
     glDisable(GL_CULL_FACE);
     _waterMesh->draw(_shader);
@@ -277,6 +286,13 @@ void App::onRenderGraphicsScene(const VRGraphicsState &renderState) {
     
     // Draw the skybox. Should be the last thing to draw
     skyBox->draw(view, projection);
+
+    // Draw text
+    double deltaTime = _curFrameTime - _lastTime;
+    std::string fps = "FPS: " + std::to_string(1.0 / deltaTime);
+    drawText(fps, 10, 10, windowHeight, windowWidth);
+    std::string sim_timestep_text = "Solution time: " + std::to_string(simulation_sol_time) + " / " + std::to_string(TIMESTEPS - 1);
+    drawText(sim_timestep_text, 10, 30, windowHeight, windowWidth);
 }
 
 void App::drawText(const std::string text, float xPos, float yPos, GLfloat windowHeight, GLfloat windowWidth) {
@@ -425,13 +441,14 @@ void App::simpleZWater(std::vector<Mesh::Vertex> *cpuVertexArray, std::vector<in
 
 void App::complexWater(std::vector<Mesh::Vertex>* cpuVertexArray, std::vector<int>* cpuIndexArray) {
     // Initialize WaterShallow class variables
-    if (sim_timestep == 0) {
-        water_shallow->init();
-        sim_timestep++;
-    }
-    else {
-        water_shallow->solve(sim_timestep++);
-        std::cout << sim_timestep << std::endl;
+    if (is_simulation_paused == false) {
+        if (simulation_sol_time == 0) {
+            water_shallow->init();
+            simulation_sol_time++;
+        }
+        else if (simulation_sol_time < TIMESTEPS - 1) {
+            water_shallow->solve(simulation_sol_time++);
+        }
     }
 
     // Create array of vertex positions
@@ -443,8 +460,8 @@ void App::complexWater(std::vector<Mesh::Vertex>* cpuVertexArray, std::vector<in
     for (int i = 0; i < ENV_TILES_X + 1; i++) {
         for (int j = 0; j < ENV_TILES_Z + 1; j++) {
             float pos_y;
-            if (water_shallow->h_list[sim_timestep][i][j] != NULL) {
-                pos_y = _ENV_HEIGHT / 2.0f - _WATER_DEPTH + water_shallow->h_list[sim_timestep][i][j];
+            if (water_shallow->h_list[simulation_sol_time][i][j] != NULL) {
+                pos_y = _ENV_HEIGHT / 2.0f - _WATER_DEPTH + water_shallow->h_list[simulation_sol_time][i][j];
 
             }
             else { // fallback
@@ -617,7 +634,7 @@ void App::complexWater(std::vector<Mesh::Vertex>* cpuVertexArray, std::vector<in
     int index_array_count = 0;
     for (int i = 0; i < ENV_TILES_X; i++) {
         for (int j = 0; j < ENV_TILES_Z; j++) {
-            Mesh::Vertex vert1; 
+            Mesh::Vertex vert1;
             vert1.position = vertex_positions[i][j];
             vert1.normal = vertex_normals[i][j];
             vert1.texCoord0 = vec2(0, 0);
@@ -641,7 +658,7 @@ void App::complexWater(std::vector<Mesh::Vertex>* cpuVertexArray, std::vector<in
 
             cpuIndexArray->push_back(index_array_count - 2); // dupe
 
-            Mesh::Vertex vert4;            
+            Mesh::Vertex vert4;
             vert4.position = vertex_positions[i + 1][j + 1];
             vert4.normal = vertex_normals[i + 1][j + 1];
             vert4.texCoord0 = vec2(0, 0);
@@ -649,72 +666,6 @@ void App::complexWater(std::vector<Mesh::Vertex>* cpuVertexArray, std::vector<in
             cpuIndexArray->push_back(index_array_count++);
         }
     }
-
-    ////////
-    /*
-    int counter = 0;
-    int xCounter = 0;
-    int yCounter = 0;
-    for (float z = -_ENV_WIDTH / 2.0; z < _ENV_WIDTH / 2.0; z += _TILE_SIZE) {
-        for (float x = -_ENV_WIDTH / 2.0; x < _ENV_WIDTH / 2.0; x += _TILE_SIZE) {
-            float vert1_pos_y;
-            float vert2_pos_y;
-            float vert3_pos_y;
-            float vert4_pos_y;
-
-            if (water_shallow->h_list[sim_timestep][xCounter][yCounter] != NULL) {
-                vert1_pos_y = _ENV_HEIGHT / 2.0f - _WATER_DEPTH + water_shallow->h_list[sim_timestep][xCounter][yCounter];
-                vert2_pos_y = _ENV_HEIGHT / 2.0f - _WATER_DEPTH + water_shallow->h_list[sim_timestep][xCounter][yCounter + 1];
-                vert3_pos_y = _ENV_HEIGHT / 2.0f - _WATER_DEPTH + water_shallow->h_list[sim_timestep][xCounter + 1][yCounter];
-                vert4_pos_y = _ENV_HEIGHT / 2.0f - _WATER_DEPTH + water_shallow->h_list[sim_timestep][xCounter + 1][yCounter + 1];
-            }
-            else {
-                vert1_pos_y = _ENV_HEIGHT / 2.0f - _WATER_DEPTH;
-                vert2_pos_y = _ENV_HEIGHT / 2.0f - _WATER_DEPTH;
-                vert3_pos_y = _ENV_HEIGHT / 2.0f - _WATER_DEPTH;
-                vert4_pos_y = _ENV_HEIGHT / 2.0f - _WATER_DEPTH;
-            }
-
-            Mesh::Vertex vert1;  // Top left
-            vert1.position = vec3(x, vert1_pos_y, z);
-            vert1.normal = normalize(vec3(0, 0, 0));
-            vert1.texCoord0 = vec2(0, 0);
-            cpuVertexArray->push_back(vert1);
-            cpuIndexArray->push_back(counter);
-            counter++;
-
-            Mesh::Vertex vert2;  // Bottom left
-            vert2.position = vec3(x, vert2_pos_y, z + _TILE_SIZE);
-            vert2.normal = normalize(vec3(0, 0, 0));
-            vert2.texCoord0 = vec2(0, 0);
-            cpuVertexArray->push_back(vert2);
-            cpuIndexArray->push_back(counter);
-            counter++;
-
-            Mesh::Vertex vert3;  // Top Right
-            vert3.position = vec3(x + _TILE_SIZE, vert3_pos_y, z);
-            vert3.normal = normalize(vec3(0, 0, 0));
-            vert3.texCoord0 = vec2(0, 0);
-            cpuVertexArray->push_back(vert3);
-            cpuIndexArray->push_back(counter);
-            cpuIndexArray->push_back(counter);  // Dupe
-            counter++;
-
-            cpuIndexArray->push_back(counter - 2); // Dupe the previous vertex
-
-            Mesh::Vertex vert4;  // Bottom right
-            vert4.position = vec3(x + _TILE_SIZE, vert4_pos_y, z + _TILE_SIZE);
-            vert4.normal = normalize(vec3(0, 0, 0));
-            vert4.texCoord0 = vec2(0, 0);
-            cpuVertexArray->push_back(vert4);
-            cpuIndexArray->push_back(counter);
-            counter++;
-            xCounter++;
-        }
-        xCounter = 0;
-        yCounter++;
-    }
-    */
 }
 
 void App::initEnvironment() {

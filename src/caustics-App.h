@@ -77,7 +77,8 @@ private:
     
 
     const float _CAMERA_RADIUS = 50.0f;
-    
+    const float _CAMERA_SENSITIVITY = 0.15f;
+   
     std::shared_ptr<basicgraphics::Texture> environmentMap;
     std::shared_ptr<basicgraphics::Skybox> skyBox;
 
@@ -113,7 +114,8 @@ private:
 
     //ComplexWaterVars
     std::unique_ptr<WaterShallow> water_shallow = std::make_unique<WaterShallow>();
-    int sim_timestep = 0;
+    int simulation_sol_time = 0;
+    bool is_simulation_paused = false;
     //EndComplexWaterVars
 };
 
