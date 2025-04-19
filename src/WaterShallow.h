@@ -5,13 +5,14 @@
 
 #define SIZE_X 47
 #define SIZE_Y 47
-#define TIMESTEPS 60
+#define TIMESTEPS 1024
 
 class WaterShallow
 {
 public:
     WaterShallow();
     void init();
+    void solve(float sim_timestep);
 
     float h_list[TIMESTEPS][SIZE_X][SIZE_Y];
 private:

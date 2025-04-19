@@ -37,8 +37,8 @@ using namespace MinVR;
 // CONSTANTS
 #define ENV_TILES_X 23
 #define ENV_TILES_Z 23
-#define ENV_TILE_LEN_X 0.5f
-#define ENV_TILE_LEN_Z 0.5f
+#define ENV_TILE_LEN_X 1.0f
+#define ENV_TILE_LEN_Z 1.0f
 #define ENV_WIDTH_X (ENV_TILES_X * ENV_TILE_LEN_X)
 #define ENV_WIDTH_Z (ENV_TILES_Z * ENV_TILE_LEN_Z)
 

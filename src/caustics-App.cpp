@@ -59,11 +59,6 @@ void App::onButtonDown(const VRButtonEvent &event) {
 	string name = event.getName();
 	if (name == "MouseBtnLeft_Down") {
 		mouseDown = true;
-    } else if (name == "Kbd1_Down") { // Initialize timesteps
-        water_shallow->init();
-    }
-    else if (name == "Kbd2_Down") { // Increase timestep by 1
-        sim_timestep++;
     }
 
 }
@@ -429,8 +424,16 @@ void App::simpleZWater(std::vector<Mesh::Vertex> *cpuVertexArray, std::vector<in
 }
 
 void App::complexWater(std::vector<Mesh::Vertex>* cpuVertexArray, std::vector<int>* cpuIndexArray) {
-    /*
-    
+    // Initialize WaterShallow class variables
+    if (sim_timestep == 0) {
+        water_shallow->init();
+        sim_timestep++;
+    }
+    else {
+        water_shallow->solve(sim_timestep++);
+        std::cout << sim_timestep << std::endl;
+    }
+
     // Create array of vertex positions
     vec3 vertex_positions[ENV_TILES_X + 1][ENV_TILES_Z + 1];
     vec3 vertex_normals[ENV_TILES_X + 1][ENV_TILES_Z + 1];
@@ -438,7 +441,7 @@ void App::complexWater(std::vector<Mesh::Vertex>* cpuVertexArray, std::vector<in
     float pos_x = -ENV_WIDTH_X / 2.0;
     float pos_z = -ENV_WIDTH_Z / 2.0;
     for (int i = 0; i < ENV_TILES_X + 1; i++) {
-        for (int j = 0; j < ENV_TILES_Z + 1; i++) {
+        for (int j = 0; j < ENV_TILES_Z + 1; j++) {
             float pos_y;
             if (water_shallow->h_list[sim_timestep][i][j] != NULL) {
                 pos_y = _ENV_HEIGHT / 2.0f - _WATER_DEPTH + water_shallow->h_list[sim_timestep][i][j];
@@ -447,14 +450,144 @@ void App::complexWater(std::vector<Mesh::Vertex>* cpuVertexArray, std::vector<in
             else { // fallback
                 pos_y = _ENV_HEIGHT / 2.0f - _WATER_DEPTH;
             }
-
             vertex_positions[i][j] = vec3(pos_x, pos_y, pos_z);
+            pos_x += ENV_TILE_LEN_X;
         }
+        pos_x = -ENV_WIDTH_X / 2.0;
+        pos_z += ENV_TILE_LEN_Z;
     }
 
     // Calculate vertex normals based off their positions
+    // Case: top left corner
+    vec3 pos_center_middle_tl = vertex_positions[0][0];
+
+    vec3 pos_center_right_tl = vertex_positions[0][1];
+    vec3 pos_bottom_middle_tl = vertex_positions[1][0];
+
+    vec3 vec_center_right_tl = pos_center_right_tl - pos_center_middle_tl;
+    vec3 vec_bottom_middle_tl = pos_bottom_middle_tl - pos_center_middle_tl;
+
+    vertex_normals[0][0] = normalize(cross(vec_bottom_middle_tl, vec_center_right_tl)) / 6.0f;
+
+    // Case: top right corner
+    vec3 pos_center_middle_tr = vertex_positions[0][ENV_TILES_Z];
+
+    vec3 pos_center_left_tr = vertex_positions[0][ENV_TILES_Z - 1];
+    vec3 pos_bottom_left_tr = vertex_positions[1][ENV_TILES_Z - 1];
+    vec3 pos_bottom_middle_tr = vertex_positions[1][ENV_TILES_Z];
+
+    vec3 vec_center_left_tr = pos_center_left_tr - pos_center_middle_tr;
+    vec3 vec_bottom_left_tr = pos_bottom_left_tr - pos_center_middle_tr;
+    vec3 vec_bottom_middle_tr = pos_bottom_middle_tr - pos_center_middle_tr;
+
+    vertex_normals[0][ENV_TILES_Z] = (normalize(cross(vec_center_left_tr, vec_bottom_left_tr))  +
+                            normalize(cross(vec_bottom_left_tr, vec_bottom_middle_tr))) / 6.0f;
+
+    // Case: bottom left corner
+    vec3 pos_center_middle_bl = vertex_positions[ENV_TILES_X][0];
+
+    vec3 pos_top_middle_bl = vertex_positions[ENV_TILES_X - 1][0];
+    vec3 pos_top_right_bl = vertex_positions[ENV_TILES_X - 1][1];
+    vec3 pos_center_right_bl = vertex_positions[ENV_TILES_X][1];
+
+    vec3 vec_top_middle_bl = pos_top_middle_bl - pos_center_middle_bl;
+    vec3 vec_top_right_bl = pos_top_right_bl - pos_center_middle_bl;
+    vec3 vec_center_right_bl = pos_center_right_bl - pos_center_middle_bl;
+
+    vertex_normals[ENV_TILES_X][0] = (normalize(cross(vec_center_right_bl, vec_top_right_bl)) +
+                            normalize(cross(vec_top_right_bl, vec_top_middle_bl))) / 6.0f;
+
+    // Case: bottom right corner
+    vec3 pos_center_middle_br = vertex_positions[ENV_TILES_X][ENV_TILES_Z];
+
+    vec3 pos_top_middle_br = vertex_positions[ENV_TILES_X - 1][ENV_TILES_Z];
+    vec3 pos_center_left_br = vertex_positions[ENV_TILES_X][ENV_TILES_Z - 1];
+
+    vec3 vec_top_middle_br = pos_top_middle_br - pos_center_middle_br;
+    vec3 vec_center_left_br = pos_center_left_br - pos_center_middle_br;
+
+    vertex_normals[ENV_TILES_X][ENV_TILES_Z] = normalize(cross(vec_top_middle_br, vec_center_left_br)) / 6.0f;
+    
+    // Case: top middle edge
+    for (int i = 1; i < ENV_TILES_Z; i++) {
+        vec3 pos_center_middle_tm = vertex_positions[0][i];
+
+        vec3 pos_center_left_tm = vertex_positions[0][i - 1];
+        vec3 pos_center_right_tm = vertex_positions[0][i + 1];
+        vec3 pos_bottom_left_tm = vertex_positions[1][i - 1];
+        vec3 pos_bottom_middle_tm = vertex_positions[1][i];
+
+        vec3 vec_center_left_tm = pos_center_left_tm - pos_center_middle_tm;
+        vec3 vec_center_right_tm = pos_center_right_tm - pos_center_middle_tm;
+        vec3 vec_bottom_left_tm = pos_bottom_left_tm - pos_center_middle_tm;
+        vec3 vec_bottom_middle_tm = pos_bottom_middle_tm - pos_center_middle_tm;
+
+        vertex_normals[0][i] = (normalize(cross(vec_center_left_tm, vec_bottom_left_tm)) +
+                                normalize(cross(vec_bottom_left_tm, vec_bottom_middle_tm)) +
+                                normalize(cross(vec_bottom_middle_tm, vec_center_right_tm))) / 6.0f;
+    }
+
+    // Case: bottom middle edge
+    for (int i = 1; i < ENV_TILES_Z; i++) {
+        vec3 pos_center_middle_bm = vertex_positions[ENV_TILES_X][i];
+
+        vec3 pos_center_left_bm = vertex_positions[ENV_TILES_X][i - 1];
+        vec3 pos_center_right_bm = vertex_positions[ENV_TILES_X][i + 1];
+        vec3 pos_top_middle_bm = vertex_positions[ENV_TILES_X - 1][i - 1];
+        vec3 pos_top_right_bm = vertex_positions[ENV_TILES_X - 1][i];
+
+        vec3 vec_center_left_bm = pos_center_left_bm - pos_center_middle_bm;
+        vec3 vec_center_right_bm = pos_center_right_bm - pos_center_middle_bm;
+        vec3 vec_top_middle_bm = pos_top_middle_bm - pos_center_middle_bm;
+        vec3 vec_top_right_bm = pos_top_right_bm - pos_center_middle_bm;
+
+        vertex_normals[ENV_TILES_X][i] = (normalize(cross(vec_center_right_bm, vec_top_right_bm)) +
+                                          normalize(cross(vec_top_right_bm, vec_top_middle_bm)) +
+                                          normalize(cross(vec_top_middle_bm, vec_center_left_bm))) / 6.0f;
+    }
+
+    
+    // Case: center left edge
     for (int i = 1; i < ENV_TILES_X; i++) {
-        for (int j = 1; j < ENV_TILES_Z; i++) {
+        vec3 pos_center_middle_cl = vertex_positions[i][0];
+
+        vec3 pos_top_middle_cl = vertex_positions[i - 1][0];
+        vec3 pos_top_right_cl = vertex_positions[i - 1][1];
+        vec3 pos_center_right_cl = vertex_positions[i][1];
+        vec3 pos_bottom_middle_cl = vertex_positions[i + 1][0];
+
+        vec3 vec_top_middle_cl = pos_top_middle_cl - pos_center_middle_cl;
+        vec3 vec_top_right_cl = pos_top_right_cl - pos_center_middle_cl;
+        vec3 vec_center_right_cl = pos_center_right_cl - pos_center_middle_cl;
+        vec3 vec_bottom_middle_cl = pos_bottom_middle_cl - pos_center_middle_cl;
+
+        vertex_normals[i][0] = (normalize(cross(vec_bottom_middle_cl, vec_center_right_cl)) +
+                                normalize(cross(vec_center_right_cl, vec_top_right_cl)) +
+                                normalize(cross(vec_top_right_cl, vec_top_middle_cl))) / 6.0f;
+    }
+
+    // Case: center right edge
+    for (int i = 1; i < ENV_TILES_X; i++) {
+        vec3 pos_center_middle_cr = vertex_positions[i][ENV_TILES_Z];
+
+        vec3 pos_bottom_middle_cr = vertex_positions[i + 1][ENV_TILES_Z];
+        vec3 pos_bottom_left_cr = vertex_positions[i + 1][ENV_TILES_Z - 1];
+        vec3 pos_center_left_cr = vertex_positions[i][ENV_TILES_Z - 1];
+        vec3 pos_top_left_cr = vertex_positions[i - 1][ENV_TILES_Z - 1];
+
+        vec3 vec_bottom_middle_cr = pos_bottom_middle_cr - pos_center_middle_cr;
+        vec3 vec_bottom_left_cr = pos_bottom_left_cr - pos_center_middle_cr;
+        vec3 vec_center_left_cr = pos_center_left_cr - pos_center_middle_cr;
+        vec3 vec_top_left_cr = pos_top_left_cr - pos_center_middle_cr;
+
+        vertex_normals[i][ENV_TILES_Z] = (normalize(cross(vec_top_left_cr, vec_center_left_cr)) +
+                                          normalize(cross(vec_center_left_cr, vec_bottom_left_cr)) +
+                                          normalize(cross(vec_bottom_left_cr, vec_bottom_middle_cr))) / 6.0f;
+    }
+
+    // Case: center
+    for (int i = 1; i < ENV_TILES_X; i++) {
+        for (int j = 1; j < ENV_TILES_Z; j++) {
             vec3 pos_center_middle = vertex_positions[i][j];
 
             vec3 pos_top_middle    = vertex_positions[i - 1][j    ];
@@ -481,15 +614,44 @@ void App::complexWater(std::vector<Mesh::Vertex>* cpuVertexArray, std::vector<in
     }
     
     // Create mesh using positions, normals, and texture coordinates
-    for (int i = 1; i < ENV_TILES_X; i++) {
-        for (int j = 1; j < ENV_TILES_Z; i++) {
+    int index_array_count = 0;
+    for (int i = 0; i < ENV_TILES_X; i++) {
+        for (int j = 0; j < ENV_TILES_Z; j++) {
+            Mesh::Vertex vert1; 
+            vert1.position = vertex_positions[i][j];
+            vert1.normal = vertex_normals[i][j];
+            vert1.texCoord0 = vec2(0, 0);
+            cpuVertexArray->push_back(vert1);
+            cpuIndexArray->push_back(index_array_count++);
 
+            Mesh::Vertex vert2;
+            vert2.position = vertex_positions[i][j + 1];
+            vert2.normal = vertex_normals[i][j + 1];
+            vert2.texCoord0 = vec2(0, 0);
+            cpuVertexArray->push_back(vert2);
+            cpuIndexArray->push_back(index_array_count++);
+
+            Mesh::Vertex vert3;
+            vert3.position = vertex_positions[i + 1][j];
+            vert3.normal = vertex_normals[i + 1][j];
+            vert3.texCoord0 = vec2(0, 0);
+            cpuVertexArray->push_back(vert3);
+            cpuIndexArray->push_back(index_array_count);
+            cpuIndexArray->push_back(index_array_count++); // dupe
+
+            cpuIndexArray->push_back(index_array_count - 2); // dupe
+
+            Mesh::Vertex vert4;            
+            vert4.position = vertex_positions[i + 1][j + 1];
+            vert4.normal = vertex_normals[i + 1][j + 1];
+            vert4.texCoord0 = vec2(0, 0);
+            cpuVertexArray->push_back(vert4);
+            cpuIndexArray->push_back(index_array_count++);
         }
     }
 
-    */
-
     ////////
+    /*
     int counter = 0;
     int xCounter = 0;
     int yCounter = 0;
@@ -552,6 +714,7 @@ void App::complexWater(std::vector<Mesh::Vertex>* cpuVertexArray, std::vector<in
         xCounter = 0;
         yCounter++;
     }
+    */
 }
 
 void App::initEnvironment() {

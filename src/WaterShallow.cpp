@@ -150,6 +150,10 @@ void WaterShallow::init() {
     
 }
 
+void WaterShallow::solve(float sim_timestep) {
+
+}
+
 void WaterShallow::linspace(float* arr, float start, float stop, int num) {
     float step = (stop - start) / (float)num;
 
