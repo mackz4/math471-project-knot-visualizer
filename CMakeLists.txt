@@ -35,15 +35,15 @@ message(STATUS "Using install prefix: ${CMAKE_INSTALL_PREFIX}")
 
 set(source_files
   src/main.cpp
-  src/caustics-App.cpp
-  src/Skybox.cpp
-  src/WaterShallow.cpp
+  src/App.cpp
+  src/Node.cpp
+  src/Edge.cpp
 )
 
 set(header_files
-  src/caustics-App.h
-  src/Skybox.h
-  src/WaterShallow.h
+  src/App.h
+  src/Node.h
+  src/Edge.h
 )
 
 set(extra_files

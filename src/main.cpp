@@ -1,4 +1,4 @@
-#include "caustics-App.h"
+#include "App.h"
 
 int main(int argc, char **argv) {
     // argc, argv need to be passed to the app so that MinVR can parse command
