@@ -35,10 +35,10 @@ using namespace MinVR;
 #include <memory>
 
 // CONSTANTS
-#define ENV_TILES_X 48
-#define ENV_TILES_Z 48
-#define ENV_TILE_LEN_X 0.5f
-#define ENV_TILE_LEN_Z 0.5f
+#define ENV_TILES_X 50
+#define ENV_TILES_Z 50
+#define ENV_TILE_LEN_X 2.0f
+#define ENV_TILE_LEN_Z 2.0f
 #define ENV_WIDTH_X (ENV_TILES_X * ENV_TILE_LEN_X)
 #define ENV_WIDTH_Z (ENV_TILES_Z * ENV_TILE_LEN_Z)
 
@@ -70,37 +70,40 @@ private:
     const float _ENV_WIDTH = 24.0; // orig _ENV_WIDTH
     const float _ENV_HEIGHT = 14.0;
     const float _TILE_SIZE = 0.5f; // orig _TILE_WIDTH
-    const float _WATER_DEPTH = 2.0f;
+    const float KNOT_RADIUS = 1.0f;
+    const int   KNOT_STACKS = 10;
+    const int   KNOT_SLICES = KNOT_STACKS * 2;
+    const float KNOT_VERTEX_DIST_MIN = 1.0f;
 
+    const glm::vec3 _LIGHT_DIRECTION = glm::vec3(0.0f, -1.0f, 0.0f);
 
-    const glm::vec3 _LIGHT_DIRECTION = glm::normalize(glm::vec3(0.0f, -1.0f, 0.0f));
-    
-
-    const float _CAMERA_RADIUS = 50.0f;
+    float _CAMERA_RADIUS = 25.0f;
     const float _CAMERA_SENSITIVITY = 0.15f;
    
     std::shared_ptr<basicgraphics::Texture> environmentMap;
     std::shared_ptr<basicgraphics::Skybox> skyBox;
 
-    std::unique_ptr<basicgraphics::Mesh> _waterMesh;
-    std::unique_ptr<basicgraphics::Mesh> _wallsMesh;
+    std::unique_ptr<basicgraphics::Mesh> _waterMesh;    
 
 	double _lastTime;
 	double _curFrameTime;
 
     bool mouseDown; // Signifies whether the left mouse button is currently held down.
+    bool mouseRightDown;
+    float mousePosX;
+    float mousePosY;
     float currTheta;
     float currPhi;
     glm::vec3 angleToSpherePoint(float theta, float phi);
-    void initWaterMesh(string waveType);
-    void initEnvironment();
-    void simpleZWater(std::vector<Mesh::Vertex> *cpuVertexArray, std::vector<int> *cpuIndexArray);
-    void complexWater(std::vector<Mesh::Vertex>* cpuVertexArray, std::vector<int>* cpuIndexArray);
+    void addGeometryEdge();
+    void addGeometryGuide(vec3 knot_vertex_prev, vec3 knot_vertex_curr, float knot_vertex_distance);
+    void updateLastEdge(float vert_displacement_y);
 
     glm::vec2 lastMousePos;
     glm::vec3 eye_world;
     glm::vec3 up_vector;
     glm::vec4 lightPosition;
+    glm::vec3 materialColor = vec3(1.0, 1.0, 1.0);
 
 	virtual void reloadShaders();
 	GLSLProgram _shader;
@@ -112,11 +115,22 @@ private:
 	struct FONScontext* fs;
 	GLSLProgram _textShader;
 
-    //ComplexWaterVars
-    std::unique_ptr<WaterShallow> water_shallow = std::make_unique<WaterShallow>();
-    int simulation_sol_time = -1;
-    bool is_simulation_paused = false;
-    //EndComplexWaterVars
+    //KnotMeshVars
+    bool is_painting = true;
+
+    std::vector<std::unique_ptr<basicgraphics::Mesh>> knot_edge_meshes;
+    std::vector<glm::vec3> knot_vertices;
+
+    std::unique_ptr<basicgraphics::Mesh> knot_guide_mesh;
+    glm::vec3 knot_guide_vertex;
+    glm::vec3 knot_guide_color;
+
+    int knot_vertex_stack_count = 0;
+    int knot_vertex_count = 0;
+
+    std::vector<glm::vec3> knot_guide_vertices;
+    std::vector <glm::vec3> last_knot_vertices;
+    //EndKnotMeshVars
 };
 
 

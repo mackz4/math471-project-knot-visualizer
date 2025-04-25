@@ -14,7 +14,7 @@ App::App(int argc, char** argv) : VRApp(argc, argv)
 	_curFrameTime = 0.0;
 
 	currTheta = glm::radians(0.0);
-	currPhi = glm::radians(0.0);
+	currPhi = glm::radians(90.0);
 
     eye_world = angleToSpherePoint(currTheta, currPhi);
     vec3 look_vector = -normalize(eye_world);
@@ -29,9 +29,7 @@ App::App(int argc, char** argv) : VRApp(argc, argv)
     }
 
 	mouseDown = false;
-
-    water_shallow->init();
-    simulation_sol_time++;
+    mouseRightDown = false;
 }
 
 App::~App()
@@ -43,12 +41,20 @@ App::~App()
 void App::onAnalogChange(const VRAnalogEvent &event) {
     // This routine is called for all Analog_Change events.  Check event->getName()
     // to see exactly which analog input has been changed, and then access the
-    // new value with event->getValue().
-    
+    // new value with event->getValue(). 
+
 	if (event.getName() == "FrameStart") {
 		_lastTime = _curFrameTime;
 		_curFrameTime = event.getValue();
 	}
+    if (event.getName() == "MouseWheel_Spin") {
+        if (event.getValue() > 0) {
+
+        }
+        else if (event.getValue() < 0) {
+
+        }
+    }
 
 
 }
@@ -65,26 +71,67 @@ void App::onButtonDown(const VRButtonEvent &event) {
         _grabbing = true;
     }
 	*/
-
-	//std::cout << "ButtonDown: " << event.getName() << std::endl;
 	string name = event.getName();
 	if (name == "MouseBtnLeft_Down") {
-		mouseDown = true;
+        vec3 knot_vertex = vec3(0.0, -(mousePosY - 512.0) / 20.48, -(mousePosX - 512.0) / 20.48);
+        if (knot_vertex.y >= -25.0 && knot_vertex.y <= 25.0 && knot_vertex.z >= -25.0 && knot_vertex.z <= 25.0) { // within range
+            if (knot_vertex_count == 0) {
+                knot_vertices.push_back(knot_vertex);
+                knot_vertex_count++;
+            }
+            else {
+                float knot_guide_length = glm::sqrt(glm::pow(knot_vertex.y - knot_vertices.at(knot_vertex_count - 1).y, 2) + glm::pow(knot_vertex.z - knot_vertices.at(knot_vertex_count - 1).z, 2));
+                if (knot_guide_length < KNOT_VERTEX_DIST_MIN) {
+
+                }
+                else {
+                    knot_vertices.push_back(knot_vertex);
+                    knot_vertex_count++;
+                    //addGeometryEdge();
+                    //Test
+                    std::cout << "CLIK" << std::endl;
+                    knot_edge_meshes.push_back(std::move(knot_guide_mesh));
+                    last_knot_vertices = knot_guide_vertices;
+
+                    //
+                }
+
+
+               /* float knot_vertex_distance = glm::sqrt(glm::pow(node_pos_y - knot_vertices.at(knot_vertex_count - 1).y, 2) + glm::pow(node_pos_z - knot_vertices.at(knot_vertex_count - 1).z, 2));
+                if (knot_vertex_distance > KNOT_VERTEX_DIST_MIN) {
+                    knot_vertices.push_back(vec3(0.0, node_pos_y, node_pos_z));
+                    addGeometryEdge(knot_vertices.at(knot_vertex_count - 1), knot_vertices.at(knot_vertex_count));
+                    knot_vertex_count++;
+                    knot_edge_count++;
+
+                }*/
+            }
+        }
+        mouseDown = true;
     }
-    else if (name == "KbdF1_Down") {
-        simulation_sol_time = -1;
-        water_shallow->init();
-        simulation_sol_time++;
+    else if (name == "MouseBtnRight_Down") {
+        mouseRightDown = true;
+        is_painting = false;
     }
-    else if (name == "KbdF2_Down") {
-        is_simulation_paused = !is_simulation_paused;
-    }
-    else if (name == "KbdF3_Down") {
-        if (is_simulation_paused == false) {
-            is_simulation_paused = true;
-        } 
-        water_shallow->solve();
-        simulation_sol_time++;
+    else if (name == "KbdLeftAlt_Down") {
+        if (is_painting == false) {
+            currTheta = glm::radians(0.0);
+            currPhi = glm::radians(0.0);
+
+            eye_world = angleToSpherePoint(currTheta, currPhi);
+            vec3 look_vector = -normalize(eye_world);
+            if (glm::degrees(currPhi) == 0.0) {
+                up_vector = vec3(-cos(currTheta), 0.0, -sin(currTheta));
+            }
+            else if (glm::degrees(currPhi) == 180.0) {
+                up_vector = vec3(cos(currTheta), 0.0, sin(currTheta));
+            }
+            else {
+                vec3 right_vector = normalize(cross(look_vector, vec3(0.0, 1.0, 0.0)));
+                up_vector = normalize(cross(right_vector, look_vector));
+            }
+        }
+        is_painting = !is_painting;
     }
 }
 
@@ -96,14 +143,53 @@ void App::onButtonUp(const VRButtonEvent &event) {
 	if (event.getName() == "MouseBtnLeft_Up") {
 		mouseDown = false;
 	}
+    else if (event.getName() == "MouseBtnRight_Up") {
+        mouseRightDown = false;
+    }
 }
 
 void App::onCursorMove(const VRCursorEvent &event) {
 	// This routine is called for all mouse move events. You can get the absolute position
 	// or the relative position within the window scaled 0--1.
-	
 	//std::cout << "MouseMove: "<< event.getName() << " " << event.getPos()[0] << " " << event.getPos()[1] << std::endl;
-	if (mouseDown) {
+    mousePosX = event.getPos()[0];
+    mousePosY = event.getPos()[1];
+
+    vec3 knot_vertex = vec3(0.0, -(event.getPos()[1] - 512.0) / 20.48, -(event.getPos()[0] - 512.0) / 20.48);
+    if (knot_vertex_count > 0) {
+        if (knot_vertex.y >= -25.0 && knot_vertex.y <= 25.0 && knot_vertex.z >= -25.0 && knot_vertex.z <= 25.0) {
+            float knot_guide_length = glm::sqrt(glm::pow(knot_vertex.y - knot_vertices.at(knot_vertex_count - 1).y, 2) + glm::pow(knot_vertex.z - knot_vertices.at(knot_vertex_count - 1).z, 2));
+            
+            if (knot_guide_length < KNOT_VERTEX_DIST_MIN) {
+                knot_guide_color = vec3(1.0, 0.0, 0.0);
+            }
+            else {
+                knot_guide_color = vec3(1.0, 1.0, 1.0);
+            }
+            knot_guide_vertex = knot_vertex;
+            addGeometryGuide(knot_vertices.at(knot_vertex_count - 1), knot_guide_vertex, knot_guide_length);            
+        }
+    }
+
+    //if (mouseDown) {
+    //    float node_pos_y = -(event.getPos()[1] - 512.0) / 20.48;
+    //    float node_pos_z = -(event.getPos()[0] - 512.0) / 20.48;
+    //    if (node_pos_y >= -25.0 && node_pos_y <= 25.0 && node_pos_z >= -25.0 && node_pos_z <= 25.0) {
+    //        float knot_vertex_distance = glm::sqrt(glm::pow(node_pos_y - knot_vertices.at(node_count - 1).y, 2) + glm::pow(node_pos_z - knot_vertices.at(node_count - 1).z, 2));
+    //        if (knot_vertex_distance > KNOT_VERTEX_DIST_MIN) {
+    //            //addGeometryNode(node_pos_y, node_pos_z);
+    //            //knot_vertices.push_back(vec3(0.0, node_pos_y, node_pos_z));
+    //            //addGeometryEdge(knot_vertices.at(node_count - 1), knot_vertices.at(node_count));
+    //            //node_count++;
+    //            //edge_count++;
+
+    //        }
+    //        else {
+    //            addGeometryEdgeLead(knot_vertices.at(node_count - 1), knot_vertices.at(node_count));
+    //        }
+    //    }
+    //}
+    if (mouseRightDown) {
 		vec2 dxy = vec2(event.getPos()[0], event.getPos()[1]) - lastMousePos;
 
 		float changeTheta = glm::atan(dxy.x * _CAMERA_SENSITIVITY, _CAMERA_RADIUS);
@@ -126,6 +212,7 @@ void App::onCursorMove(const VRCursorEvent &event) {
             up_vector = normalize(cross(right_vector, look_vector));
         }
 	}
+    
 	lastMousePos = vec2(event.getPos()[0], event.getPos()[1]);
 }
 
@@ -169,14 +256,14 @@ void App::onRenderGraphicsContext(const VRGraphicsState &renderState) {
 		glEnable(GL_MULTISAMPLE);
 
 		// This sets the background color that is used to clear the canvas
-		glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         
         // Set the Environment with a simple Binn-Phong shader
         _environment_shader.compileShader("vertex.vert", GLSLShader::VERTEX);
         _environment_shader.compileShader("environment.frag", GLSLShader::FRAGMENT);
         _environment_shader.link();
         _environment_shader.use();
-        initEnvironment();
+        //initEnvironment();
 
 		// This load shaders from disk, we do it once when the program starts up.
 		reloadShaders();
@@ -193,7 +280,8 @@ void App::onRenderGraphicsContext(const VRGraphicsState &renderState) {
         // -Z (back)
         //string textureFiles[] = {"desert_evening_east.jpg", "desert_evening_west.jpg", "desert_evening_up.jpg", "desert_evening_down.jpg", "desert_evening_north.jpg", "desert_evening_south.jpg"};
         //string textureFiles[] = { "skybox_px.jpg", "skybox_nx.jpg", "skybox_py.jpg", "skybox_ny.jpg", "skybox_pz.jpg", "skybox_nz.jpg" };
-        string textureFiles[] = { "partcloudy_px.jpg", "partcloudy_nx.jpg", "partcloudy_py.jpg", "partcloudy_ny.jpg", "partcloudy_pz.jpg", "partcloudy_nz.jpg" };
+        //string textureFiles[] = { "partcloudy_px.jpg", "partcloudy_nx.jpg", "partcloudy_py.jpg", "partcloudy_ny.jpg", "partcloudy_pz.jpg", "partcloudy_nz.jpg" };
+        string textureFiles[] = { "blackskybox.jpg", "blackskybox.jpg", "blackskybox.jpg", "blackskybox.jpg", "blackskybox.jpg", "blackskybox.jpg" };
         environmentMap = Texture::createCubeMapFromFiles(textureFiles, true, 4);
         environmentMap->setTexParameteri(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         environmentMap->setTexParameteri(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -203,19 +291,13 @@ void App::onRenderGraphicsContext(const VRGraphicsState &renderState) {
         
         skyBox.reset(new Skybox(environmentMap));
         
-        // set the light position to roughly match up with the sun position in the skybox texture
-        float radius = 10.0;
-        lightPosition = vec4(-1.7*radius, 0.3*radius, -1.0*radius, 1.0);
-        
-        _tex = Texture::create2DTextureFromFile("images/poolTile.jpg");
-        _tex->setTexParameteri(GL_TEXTURE_WRAP_S, GL_REPEAT);
-        _tex->setTexParameteri(GL_TEXTURE_WRAP_T, GL_REPEAT);
-        _tex->setTexParameteri(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        _tex->setTexParameteri(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        //_tex = Texture::create2DTextureFromFile("images/poolTile.jpg");
+        //_tex->setTexParameteri(GL_TEXTURE_WRAP_S, GL_REPEAT);
+        //_tex->setTexParameteri(GL_TEXTURE_WRAP_T, GL_REPEAT);
+        //_tex->setTexParameteri(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        //_tex->setTexParameteri(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     }
-    
-	//initWaterMesh("SimpleZ");
-    initWaterMesh("Complex");
+
 }
 
 
@@ -236,82 +318,149 @@ void App::onRenderGraphicsScene(const VRGraphicsState &renderState) {
 	// Setup the projection matrix so that things are rendered in perspective
 	GLfloat windowHeight = renderState.index().getValue("FramebufferHeight");
 	GLfloat windowWidth = renderState.index().getValue("FramebufferWidth");
-	glm::mat4 projection = glm::perspective(glm::radians(45.0f), windowWidth / windowHeight, 0.01f, 100.0f);
+	//glm::mat4 projection = glm::perspective(glm::radians(45.0f), windowWidth / windowHeight, 0.01f, 100.0f);
+    glm::mat4 projection = glm::ortho(-25.0f, 25.0f, -25.0f, 25.0f, 0.01f, 100.0f);
+    //glm::mat4 projection = glm::perspective(glm::radians(45.0f), windowWidth / windowHeight, 0.01f, 100.0f);
 	// When we use virtual reality, this will be replaced by:
 	// projection = glm::make_mat4(renderState.getProjectionMatrix())
-	
-	
-    
-	// Tell opengl we want to use this specific shader.
-	_shader.use();
-	
-	_shader.setUniform("view_mat", view);
-	_shader.setUniform("projection_mat", projection);
-	
-	_shader.setUniform("model_mat", mat4(1.0));
-	_shader.setUniform("normal_mat", mat3(transpose(inverse(mat4(1.0)))));
-	_shader.setUniform("eye_world", eye_world);
+
+
+
+// Tell opengl we want to use this specific shader.
+_shader.use();
+
+_shader.setUniform("view_mat", view);
+_shader.setUniform("projection_mat", projection);
+
+_shader.setUniform("model_mat", mat4(1.0));
+_shader.setUniform("normal_mat", mat3(transpose(inverse(mat4(1.0)))));
+_shader.setUniform("eye_world", eye_world);
+
+
+// Set Uniforms
+_shader.setUniform("light_direction", _LIGHT_DIRECTION);
+
+// Set Uniforms
+
+float glassR0 = 0.4;
+//float eta = 0.67;
+vec3 glassEta(0.65, 0.67, 0.68);
+
+_shader.setUniform("glassR0", glassR0);
+_shader.setUniform("glassEta", glassEta);
+
+glDisable(GL_CULL_FACE);
+//_waterMesh->draw(_shader);
+
+// TODO: enable then draw walls
+_environment_shader.use();
+// Properties of the material the model is made out of (the "K" terms in the equations discussed in class)
+// These values should make the model look like it is made out of a metal, like brass
+//vec3 ambientReflectionCoeff = vec3(0.22);
+//vec3 diffuseReflectionCoeff = vec3(0.22);
+//vec3 specularReflectionCoeff = vec3(0.15);
+
+vec3 ambientReflectionCoeff = vec3(0.4125, 0.275, 0.0375);
+vec3 diffuseReflectionCoeff = vec3(0.78, 0.57, 0.11);
+vec3 specularReflectionCoeff = vec3(0.99, 0.94, 0.80);
+float specularExponent = 27.9;
+
+// Properties of the light source (the "I" terms in the equations discussed in class)
+// These values are for a white light so the r,g,b intensities are all the same
+//vec3 ambientLightIntensity = vec3(0.5, 0.5, 0.5);
+//vec3 diffuseLightIntensity = vec3(0.6, 0.6, 0.6);
+//vec3 specularLightIntensity = vec3(0.9, 0.9, 0.9);
+vec3 ambientLightIntensity = vec3(0.4, 0.4, 0.4);
+vec3 diffuseLightIntensity = vec3(0.6, 0.6, 0.6);
+vec3 specularLightIntensity = vec3(1.0, 1.0, 1.0);
+
+_environment_shader.setUniform("materialColor", materialColor);
+_environment_shader.setUniform("lightDirection", _LIGHT_DIRECTION);
+
+_environment_shader.setUniform("ambientReflectionCoeff", ambientReflectionCoeff);
+_environment_shader.setUniform("diffuseReflectionCoeff", diffuseReflectionCoeff);
+_environment_shader.setUniform("specularReflectionCoeff", specularReflectionCoeff);
+
+_environment_shader.setUniform("specularExponent", specularExponent);
+
+_environment_shader.setUniform("ambientLightIntensity", ambientLightIntensity);
+_environment_shader.setUniform("diffuseLightIntensity", diffuseLightIntensity);
+_environment_shader.setUniform("specularLightIntensity", specularLightIntensity);
+
+_environment_shader.setUniform("view_mat", view);
+_environment_shader.setUniform("projection_mat", projection);
+
+_environment_shader.setUniform("model_mat", mat4(1.0));
+_environment_shader.setUniform("normal_mat", mat3(transpose(inverse(mat4(1.0)))));
+_environment_shader.setUniform("eye_world", eye_world);
+glEnable(GL_CULL_FACE);  // Use GL_frontfacing if needed
+
+// CYLINDERS
+_environment_shader.setUniform("materialColor", materialColor);
+for (int i = 0; i < knot_vertex_count - 1; i++) {
+    glm::mat4 model = mat4(1.0);
+    vec3 vertex_curr = knot_vertices.at(i + 1);
+    vec3 vertex_prev = knot_vertices.at(i);
+    vec3 vertex_vec = normalize(vertex_curr - vertex_prev);
+
+    vec3 point_middle = (vertex_curr + vertex_prev) / 2.0f;
+    // T
+    float rotation;
+    if (vertex_vec.z <= 0) {
+        rotation = glm::atan(vertex_vec.y / vertex_vec.z) + (glm::pi<float>() / 2.0);
+    }
+    else {
+        rotation = glm::pi<float>() + glm::atan(vertex_vec.y / vertex_vec.z) + (glm::pi<float>() / 2.0);
+    }
+
+    // T
+
+    glm::mat4 mat_identity = mat4(1.0);
+    glm::mat4 mat_rotX = glm::rotate(mat_identity, -rotation, vec3(1, 0, 0));
+    glm::mat4 mat_from_origin = glm::translate(mat_identity, point_middle);
+
+    _shader.setUniform("model_mat", mat_from_origin * mat_rotX);
+    knot_edge_meshes.at(i)->draw(_environment_shader);
+}
+
+// GUIDE
+if (knot_guide_mesh != NULL) {
+    glm::mat4 model = mat4(1.0);
+    vec3 vertex_curr = knot_guide_vertex;
+    vec3 vertex_prev = knot_vertices.at(knot_vertex_count - 1);
+    vec3 vertex_vec = normalize(vertex_curr - vertex_prev);
+
+    vec3 point_middle = (vertex_curr + vertex_prev) / 2.0f;
+
+    float rotation;
+    if (vertex_vec.z <= 0) {
+        rotation = glm::atan(vertex_vec.y / vertex_vec.z) + (glm::pi<float>() / 2.0);
+    }
+    else {
+        rotation = glm::pi<float>() + glm::atan(vertex_vec.y / vertex_vec.z) + (glm::pi<float>() / 2.0);
+    }
+        //std::cout << vertex_vec.y << " | " << vertex_vec.z << std::endl;
+        //std::cout << glm::degrees(rotation) << std::endl;
+
+        glm::mat4 mat_identity = mat4(1.0);
+        glm::mat4 mat_rotX = glm::rotate(mat_identity, -rotation, vec3(1, 0, 0));
+        glm::mat4 mat_from_origin = glm::translate(mat_identity, point_middle);
+       
+
+        _environment_shader.setUniform("model_mat", mat_from_origin * mat_rotX);
+        _environment_shader.setUniform("materialColor", knot_guide_color);
+        knot_guide_mesh->draw(_environment_shader);
+    }
+
 
     
-    // Set Uniforms
-    _shader.setUniform("light_direction", _LIGHT_DIRECTION);
-    
-    // Set Uniforms
-    
-    float glassR0 = 0.4;
-    //float eta = 0.67;
-    vec3 glassEta(0.65, 0.67, 0.68);
-    
-    _shader.setUniform("glassR0", glassR0);
-    _shader.setUniform("glassEta", glassEta);
-    
-    glDisable(GL_CULL_FACE);
-    _waterMesh->draw(_shader);
-    
-    // TODO: enable then draw walls
-    _environment_shader.use();
-    // Properties of the material the model is made out of (the "K" terms in the equations discussed in class)
-    // These values should make the model look like it is made out of a metal, like brass
-    vec3 ambientReflectionCoeff = vec3(0.4125, 0.275, 0.0375);
-    vec3 diffuseReflectionCoeff = vec3(0.78, 0.57, 0.11);
-    vec3 specularReflectionCoeff = vec3(0.99, 0.94, 0.80);
-    float specularExponent = 27.9;
-    
-    // Properties of the light source (the "I" terms in the equations discussed in class)
-    // These values are for a white light so the r,g,b intensities are all the same
-    vec3 ambientLightIntensity = vec3(0.4, 0.4, 0.4);
-    vec3 diffuseLightIntensity = vec3(0.6, 0.6, 0.6);
-    vec3 specularLightIntensity = vec3(1.0, 1.0, 1.0);
-    
-    _environment_shader.setUniform("ambientReflectionCoeff", ambientReflectionCoeff);
-    _environment_shader.setUniform("diffuseReflectionCoeff", diffuseReflectionCoeff);
-    _environment_shader.setUniform("specularReflectionCoeff", specularReflectionCoeff);
-    
-    _environment_shader.setUniform("specularExponent", specularExponent);
-    
-    _environment_shader.setUniform("ambientLightIntensity", ambientLightIntensity);
-    _environment_shader.setUniform("diffuseLightIntensity", diffuseLightIntensity);
-    _environment_shader.setUniform("specularLightIntensity", specularLightIntensity);
-    
-    _environment_shader.setUniform("view_mat", view);
-    _environment_shader.setUniform("projection_mat", projection);
-    
-    _environment_shader.setUniform("model_mat", mat4(1.0));
-    _environment_shader.setUniform("normal_mat", mat3(transpose(inverse(mat4(1.0)))));
-    _environment_shader.setUniform("eye_world", eye_world);
-    _environment_shader.setUniform("lightPosition", lightPosition);
-    glEnable(GL_CULL_FACE);  // Use GL_frontfacing if needed
-    _wallsMesh->draw(_shader);
-    
-    // Draw the skybox. Should be the last thing to draw
-    skyBox->draw(view, projection);
 
     // Draw text
     double deltaTime = _curFrameTime - _lastTime;
     std::string fps = "FPS: " + std::to_string(1.0 / deltaTime);
     drawText(fps, 10, 10, windowHeight, windowWidth);
-    std::string sim_timestep_text = "Solution time: " + std::to_string(simulation_sol_time);
-    drawText(sim_timestep_text, 10, 30, windowHeight, windowWidth);
+    std::string vertex_count_text = "Vertices: " + std::to_string(knot_vertex_count);
+    drawText(vertex_count_text, 10, 30, windowHeight, windowWidth);
     //std::string theta_text = "Theta: " + std::to_string(glm::degrees(currTheta));
     //drawText(theta_text, 10, 50, windowHeight, windowWidth);
     //std::string phi_text = "Phi: " + std::to_string(glm::degrees(currPhi));
@@ -351,518 +500,203 @@ void App::reloadShaders()
 	_shader.use();
 }
 
-void App::initializeText() {
-	int fontNormal = FONS_INVALID;
-	fs = nullptr;
-
-	fs = glfonsCreate(512, 512, FONS_ZERO_TOPLEFT);
-	if (fs == NULL) {
-		assert(false);//Could not create stash
-	}
-
-	fontNormal = fonsAddFont(fs, "sans", "DroidSansMono.ttf");
-	if (fontNormal == FONS_INVALID) {
-		assert(false);// Could not add font normal.
-	}
-
-	unsigned int white = glfonsRGBA(255, 255, 255, 255);
-
-	fonsClearState(fs);
-	fonsSetSize(fs, 20);
-	fonsSetFont(fs, fontNormal);
-	fonsSetColor(fs, white);
-	fonsSetAlign(fs, FONS_ALIGN_LEFT | FONS_ALIGN_TOP);
-
-	_textShader.compileShader("textRendering.vert", GLSLShader::VERTEX);
-	_textShader.compileShader("textRendering.frag", GLSLShader::FRAGMENT);
-	_textShader.link();
-}
-
 vec3 App::angleToSpherePoint(float theta, float phi) {
-	//float x = _CAMERA_RADIUS * sin(phi) * sin(theta);
-	//float y = _CAMERA_RADIUS * cos(phi);
-	//float z = _CAMERA_RADIUS * sin(phi) * cos(theta);
     float x = _CAMERA_RADIUS * sin(phi) * cos(theta);
     float y = _CAMERA_RADIUS * cos(phi);
     float z = _CAMERA_RADIUS * sin(phi) * sin(theta);
 
-	//std::cout << theta << " " << phi << std::endl;
-	//
-	//std::cout << x << " " << y << " " << z << std::endl;
 	return vec3(x, y, z);
 }
 
-void App::initWaterMesh(string waveType) {
-	// Update Water Mesh
-	std::vector<Mesh::Vertex> cpuVertexArray;  // VBO
-	std::vector<int> cpuIndexArray;  // Index list
-	std::vector<std::shared_ptr<Texture>> textures;
-    
-    // TODO: add switch statement to choose a water function based on waveType
-    if (waveType == "SimpleZ") {
-        simpleZWater(&cpuVertexArray, &cpuIndexArray);
-    }
-    else if (waveType == "Complex") {
-        complexWater(&cpuVertexArray, &cpuIndexArray);
-    }
-
-	// Set the Water mesh
-	const int numVertices = cpuVertexArray.size();
-	const int cpuVertexByteSize = sizeof(Mesh::Vertex) * numVertices;
-	const int cpuIndexByteSize = sizeof(int) * cpuIndexArray.size();
-
-	_waterMesh.reset(new Mesh(textures, GL_TRIANGLES , GL_DYNAMIC_DRAW, cpuVertexByteSize, cpuIndexByteSize, 0, cpuVertexArray, cpuIndexArray.size(), cpuIndexByteSize, &cpuIndexArray[0]));
-
-	//_waterMesh->setMaterialColor(vec4(0.0, 0.0, 1.0, 1.0));
-
-}
-
-void App::simpleZWater(std::vector<Mesh::Vertex> *cpuVertexArray, std::vector<int> *cpuIndexArray) {
-    // Create the vertices
-    int counter = 0;
-    for (float z = -_ENV_WIDTH / 2.0; z < _ENV_WIDTH / 2.0; z += _TILE_SIZE) {
-        for (float x = -_ENV_WIDTH / 2.0; x < _ENV_WIDTH / 2.0; x += _TILE_SIZE) {
-            float amplitude = 1.0f;
-            float amplitude2 = 2.0f;
-            float timeDis = _curFrameTime;
-            float y_coord1 = amplitude * glm::sin(z + timeDis) + _ENV_HEIGHT / 2.0f - amplitude2;  // The y-coordinate is constant (for now)
-            float y_coord2 = amplitude * glm::sin(z + _TILE_SIZE + timeDis) + _ENV_HEIGHT / 2.0f - amplitude2;
-
-            Mesh::Vertex vert1;  // Top left
-            vert1.position = vec3(x, y_coord1, z);
-            vert1.normal = normalize(vec3(0, glm::sin(z + timeDis), glm::cos(z + timeDis)));
-            vert1.texCoord0 = vec2(0, 0);
-            cpuVertexArray->push_back(vert1);
-            cpuIndexArray->push_back(counter);
-            counter++;
-
-            Mesh::Vertex vert2;  // Bottom left
-            vert2.position = vec3(x, y_coord2, z + _TILE_SIZE);
-            vert2.normal = normalize(vec3(0, glm::sin(z + _TILE_SIZE + timeDis), glm::cos(z + _TILE_SIZE + timeDis)));
-            vert2.texCoord0 = vec2(0, 0);
-            cpuVertexArray->push_back(vert2);
-            cpuIndexArray->push_back(counter);
-            counter++;
-
-            Mesh::Vertex vert3;  // Top Right
-            vert3.position = vec3(x + _TILE_SIZE, y_coord1, z );
-            vert3.normal = normalize(vec3(0, glm::sin(z + timeDis), glm::cos(z + timeDis)));
-            vert3.texCoord0 = vec2(0, 0);
-            cpuVertexArray->push_back(vert3);
-            cpuIndexArray->push_back(counter);
-            cpuIndexArray->push_back(counter);  // Dupe
-            counter++;
-
-            cpuIndexArray->push_back(counter - 2); // Dupe the previous vertex
-
-            Mesh::Vertex vert4;  // Bottom right
-            vert4.position = vec3(x + _TILE_SIZE, y_coord2, z + _TILE_SIZE);
-            vert4.normal = normalize(vec3(0, glm::sin(z + _TILE_SIZE + timeDis), glm::cos(z + _TILE_SIZE + timeDis)));
-            vert4.texCoord0 = vec2(0, 0);
-            cpuVertexArray->push_back(vert4);
-            cpuIndexArray->push_back(counter);
-            counter++;
-        }
-    }
-}
-
-void App::complexWater(std::vector<Mesh::Vertex>* cpuVertexArray, std::vector<int>* cpuIndexArray) {
-    if (is_simulation_paused == false && simulation_sol_time != -1) { // simulation not paused
-        water_shallow->solve();
-        simulation_sol_time++;
-    }
-
-    // Create array of vertex positions
-    vec3 vertex_positions[ENV_TILES_X + 1][ENV_TILES_Z + 1];
-    vec3 vertex_normals[ENV_TILES_X + 1][ENV_TILES_Z + 1];
-
-    float pos_x = -ENV_WIDTH_X / 2.0;
-    float pos_z = -ENV_WIDTH_Z / 2.0;
-    for (int i = 0; i < ENV_TILES_X + 1; i++) {
-        for (int j = 0; j < ENV_TILES_Z + 1; j++) {
-            float pos_y;
-            if (water_shallow->h_list[i][j] != NULL) {
-                pos_y = _ENV_HEIGHT / 2.0f - _WATER_DEPTH + water_shallow->h_list[i][j];
-
-            }
-            else { // fallback
-                pos_y = _ENV_HEIGHT / 2.0f - _WATER_DEPTH;
-            }
-            vertex_positions[i][j] = vec3(pos_x, pos_y, pos_z);
-            pos_x += ENV_TILE_LEN_X;
-        }
-        pos_x = -ENV_WIDTH_X / 2.0;
-        pos_z += ENV_TILE_LEN_Z;
-    }
-
-    // Calculate vertex normals based off their positions
-    // Case: top left corner
-    vec3 pos_center_middle_tl = vertex_positions[0][0];
-
-    vec3 pos_center_right_tl = vertex_positions[0][1];
-    vec3 pos_bottom_middle_tl = vertex_positions[1][0];
-
-    vec3 vec_center_right_tl = pos_center_right_tl - pos_center_middle_tl;
-    vec3 vec_bottom_middle_tl = pos_bottom_middle_tl - pos_center_middle_tl;
-
-    vertex_normals[0][0] = normalize(cross(vec_bottom_middle_tl, vec_center_right_tl)) / 6.0f;
-
-    // Case: top right corner
-    vec3 pos_center_middle_tr = vertex_positions[0][ENV_TILES_Z];
-
-    vec3 pos_center_left_tr = vertex_positions[0][ENV_TILES_Z - 1];
-    vec3 pos_bottom_left_tr = vertex_positions[1][ENV_TILES_Z - 1];
-    vec3 pos_bottom_middle_tr = vertex_positions[1][ENV_TILES_Z];
-
-    vec3 vec_center_left_tr = pos_center_left_tr - pos_center_middle_tr;
-    vec3 vec_bottom_left_tr = pos_bottom_left_tr - pos_center_middle_tr;
-    vec3 vec_bottom_middle_tr = pos_bottom_middle_tr - pos_center_middle_tr;
-
-    vertex_normals[0][ENV_TILES_Z] = (normalize(cross(vec_center_left_tr, vec_bottom_left_tr))  +
-                            normalize(cross(vec_bottom_left_tr, vec_bottom_middle_tr))) / 6.0f;
-
-    // Case: bottom left corner
-    vec3 pos_center_middle_bl = vertex_positions[ENV_TILES_X][0];
-
-    vec3 pos_top_middle_bl = vertex_positions[ENV_TILES_X - 1][0];
-    vec3 pos_top_right_bl = vertex_positions[ENV_TILES_X - 1][1];
-    vec3 pos_center_right_bl = vertex_positions[ENV_TILES_X][1];
-
-    vec3 vec_top_middle_bl = pos_top_middle_bl - pos_center_middle_bl;
-    vec3 vec_top_right_bl = pos_top_right_bl - pos_center_middle_bl;
-    vec3 vec_center_right_bl = pos_center_right_bl - pos_center_middle_bl;
-
-    vertex_normals[ENV_TILES_X][0] = (normalize(cross(vec_center_right_bl, vec_top_right_bl)) +
-                            normalize(cross(vec_top_right_bl, vec_top_middle_bl))) / 6.0f;
-
-    // Case: bottom right corner
-    vec3 pos_center_middle_br = vertex_positions[ENV_TILES_X][ENV_TILES_Z];
-
-    vec3 pos_top_middle_br = vertex_positions[ENV_TILES_X - 1][ENV_TILES_Z];
-    vec3 pos_center_left_br = vertex_positions[ENV_TILES_X][ENV_TILES_Z - 1];
-
-    vec3 vec_top_middle_br = pos_top_middle_br - pos_center_middle_br;
-    vec3 vec_center_left_br = pos_center_left_br - pos_center_middle_br;
-
-    vertex_normals[ENV_TILES_X][ENV_TILES_Z] = normalize(cross(vec_top_middle_br, vec_center_left_br)) / 6.0f;
-    
-    // Case: top middle edge
-    for (int i = 1; i < ENV_TILES_Z; i++) {
-        vec3 pos_center_middle_tm = vertex_positions[0][i];
-
-        vec3 pos_center_left_tm = vertex_positions[0][i - 1];
-        vec3 pos_center_right_tm = vertex_positions[0][i + 1];
-        vec3 pos_bottom_left_tm = vertex_positions[1][i - 1];
-        vec3 pos_bottom_middle_tm = vertex_positions[1][i];
-
-        vec3 vec_center_left_tm = pos_center_left_tm - pos_center_middle_tm;
-        vec3 vec_center_right_tm = pos_center_right_tm - pos_center_middle_tm;
-        vec3 vec_bottom_left_tm = pos_bottom_left_tm - pos_center_middle_tm;
-        vec3 vec_bottom_middle_tm = pos_bottom_middle_tm - pos_center_middle_tm;
-
-        vertex_normals[0][i] = (normalize(cross(vec_center_left_tm, vec_bottom_left_tm)) +
-                                normalize(cross(vec_bottom_left_tm, vec_bottom_middle_tm)) +
-                                normalize(cross(vec_bottom_middle_tm, vec_center_right_tm))) / 6.0f;
-    }
-
-    // Case: bottom middle edge
-    for (int i = 1; i < ENV_TILES_Z; i++) {
-        vec3 pos_center_middle_bm = vertex_positions[ENV_TILES_X][i];
-
-        vec3 pos_center_left_bm = vertex_positions[ENV_TILES_X][i - 1];
-        vec3 pos_center_right_bm = vertex_positions[ENV_TILES_X][i + 1];
-        vec3 pos_top_middle_bm = vertex_positions[ENV_TILES_X - 1][i - 1];
-        vec3 pos_top_right_bm = vertex_positions[ENV_TILES_X - 1][i];
-
-        vec3 vec_center_left_bm = pos_center_left_bm - pos_center_middle_bm;
-        vec3 vec_center_right_bm = pos_center_right_bm - pos_center_middle_bm;
-        vec3 vec_top_middle_bm = pos_top_middle_bm - pos_center_middle_bm;
-        vec3 vec_top_right_bm = pos_top_right_bm - pos_center_middle_bm;
-
-        vertex_normals[ENV_TILES_X][i] = (normalize(cross(vec_center_right_bm, vec_top_right_bm)) +
-                                          normalize(cross(vec_top_right_bm, vec_top_middle_bm)) +
-                                          normalize(cross(vec_top_middle_bm, vec_center_left_bm))) / 6.0f;
-    }
-
-    
-    // Case: center left edge
-    for (int i = 1; i < ENV_TILES_X; i++) {
-        vec3 pos_center_middle_cl = vertex_positions[i][0];
-
-        vec3 pos_top_middle_cl = vertex_positions[i - 1][0];
-        vec3 pos_top_right_cl = vertex_positions[i - 1][1];
-        vec3 pos_center_right_cl = vertex_positions[i][1];
-        vec3 pos_bottom_middle_cl = vertex_positions[i + 1][0];
-
-        vec3 vec_top_middle_cl = pos_top_middle_cl - pos_center_middle_cl;
-        vec3 vec_top_right_cl = pos_top_right_cl - pos_center_middle_cl;
-        vec3 vec_center_right_cl = pos_center_right_cl - pos_center_middle_cl;
-        vec3 vec_bottom_middle_cl = pos_bottom_middle_cl - pos_center_middle_cl;
-
-        vertex_normals[i][0] = (normalize(cross(vec_bottom_middle_cl, vec_center_right_cl)) +
-                                normalize(cross(vec_center_right_cl, vec_top_right_cl)) +
-                                normalize(cross(vec_top_right_cl, vec_top_middle_cl))) / 6.0f;
-    }
-
-    // Case: center right edge
-    for (int i = 1; i < ENV_TILES_X; i++) {
-        vec3 pos_center_middle_cr = vertex_positions[i][ENV_TILES_Z];
-
-        vec3 pos_bottom_middle_cr = vertex_positions[i + 1][ENV_TILES_Z];
-        vec3 pos_bottom_left_cr = vertex_positions[i + 1][ENV_TILES_Z - 1];
-        vec3 pos_center_left_cr = vertex_positions[i][ENV_TILES_Z - 1];
-        vec3 pos_top_left_cr = vertex_positions[i - 1][ENV_TILES_Z - 1];
-
-        vec3 vec_bottom_middle_cr = pos_bottom_middle_cr - pos_center_middle_cr;
-        vec3 vec_bottom_left_cr = pos_bottom_left_cr - pos_center_middle_cr;
-        vec3 vec_center_left_cr = pos_center_left_cr - pos_center_middle_cr;
-        vec3 vec_top_left_cr = pos_top_left_cr - pos_center_middle_cr;
-
-        vertex_normals[i][ENV_TILES_Z] = (normalize(cross(vec_top_left_cr, vec_center_left_cr)) +
-                                          normalize(cross(vec_center_left_cr, vec_bottom_left_cr)) +
-                                          normalize(cross(vec_bottom_left_cr, vec_bottom_middle_cr))) / 6.0f;
-    }
-
-    // Case: center
-    for (int i = 1; i < ENV_TILES_X; i++) {
-        for (int j = 1; j < ENV_TILES_Z; j++) {
-            vec3 pos_center_middle = vertex_positions[i][j];
-
-            vec3 pos_top_middle    = vertex_positions[i - 1][j    ];
-            vec3 pos_top_right     = vertex_positions[i - 1][j + 1];
-            vec3 pos_center_left   = vertex_positions[i    ][j - 1];
-            vec3 pos_center_right  = vertex_positions[i    ][j + 1];
-            vec3 pos_bottom_left   = vertex_positions[i + 1][j - 1];
-            vec3 pos_bottom_middle = vertex_positions[i + 1][j    ];
-
-            vec3 vec_top_middle = pos_top_middle - pos_center_middle;
-            vec3 vec_top_right = pos_top_right - pos_center_middle;
-            vec3 vec_center_left = pos_center_left - pos_center_middle;
-            vec3 vec_center_right = pos_center_right - pos_center_middle;
-            vec3 vec_bottom_left = pos_bottom_left - pos_center_middle;
-            vec3 vec_bottom_middle = pos_bottom_middle - pos_center_middle;
-
-            vertex_normals[i][j] = (normalize(cross(vec_top_middle, vec_center_left)) +
-                                    normalize(cross(vec_center_left, vec_bottom_left)) +
-                                    normalize(cross(vec_bottom_left, vec_bottom_middle)) +
-                                    normalize(cross(vec_bottom_middle, vec_center_right)) +
-                                    normalize(cross(vec_center_right, vec_top_right)) +
-                                    normalize(cross(vec_top_right, vec_top_middle))) / 6.0f;
-        }
-    }
-    
-    // Create mesh using positions, normals, and texture coordinates
-    int index_array_count = 0;
-    for (int i = 0; i < ENV_TILES_X; i++) {
-        for (int j = 0; j < ENV_TILES_Z; j++) {
-            Mesh::Vertex vert1;
-            vert1.position = vertex_positions[i][j];
-            vert1.normal = vertex_normals[i][j];
-            vert1.texCoord0 = vec2(0, 0);
-            cpuVertexArray->push_back(vert1);
-            cpuIndexArray->push_back(index_array_count++);
-
-            Mesh::Vertex vert2;
-            vert2.position = vertex_positions[i][j + 1];
-            vert2.normal = vertex_normals[i][j + 1];
-            vert2.texCoord0 = vec2(0, 0);
-            cpuVertexArray->push_back(vert2);
-            cpuIndexArray->push_back(index_array_count++);
-
-            Mesh::Vertex vert3;
-            vert3.position = vertex_positions[i + 1][j];
-            vert3.normal = vertex_normals[i + 1][j];
-            vert3.texCoord0 = vec2(0, 0);
-            cpuVertexArray->push_back(vert3);
-            cpuIndexArray->push_back(index_array_count);
-            cpuIndexArray->push_back(index_array_count++); // dupe
-
-            cpuIndexArray->push_back(index_array_count - 2); // dupe
-
-            Mesh::Vertex vert4;
-            vert4.position = vertex_positions[i + 1][j + 1];
-            vert4.normal = vertex_normals[i + 1][j + 1];
-            vert4.texCoord0 = vec2(0, 0);
-            cpuVertexArray->push_back(vert4);
-            cpuIndexArray->push_back(index_array_count++);
-        }
-    }
-}
-
-void App::initEnvironment() {
-    std::vector<Mesh::Vertex> cpuVertexArray;  // VBO
-    std::vector<int> cpuIndexArray;  // Index list
+void App::addGeometryGuide(vec3 knot_vertex_prev, vec3 knot_vertex_curr, float knot_vertex_distance) {
+    std::vector<Mesh::Vertex> cpuVertexArray;
+    std::vector<int> cpuIndexArray;
     std::vector<std::shared_ptr<Texture>> textures;
 
-    // Set the mesh
-    Mesh::Vertex backTopLeft;  // 0
-    backTopLeft.position = vec3(-_ENV_WIDTH/2.0f, _ENV_HEIGHT/2.0f, -_ENV_WIDTH/2.0f);
-    backTopLeft.normal = vec3(0, 0, 1);
-    backTopLeft.texCoord0 = vec2(0.0, 0.0);
-    cpuVertexArray.push_back(backTopLeft);
-    cpuIndexArray.push_back(0);
+    //Test
+    float vert_displacement_y = 0.0f;
+    float angle = 0.0f;
+    if (knot_vertex_count >= 2) {
+        vec3 a = glm::normalize(knot_guide_vertex - knot_vertices.at(knot_vertex_count - 1));
+        vec3 b = glm::normalize(knot_vertices.at(knot_vertex_count - 2) - knot_vertices.at(knot_vertex_count - 1));
+        angle = (180.0 - glm::degrees(glm::acos(glm::dot(a, b) / (glm::length(a) * glm::length(b)))) ) / 2.0;
+        vert_displacement_y = KNOT_RADIUS * glm::tan(glm::radians(angle));
+    }
+    float hyp_len = glm::sqrt(KNOT_RADIUS * KNOT_RADIUS + vert_displacement_y * vert_displacement_y);
     
-    Mesh::Vertex backBottomLeft;  // 1
-    backBottomLeft.position = vec3(-_ENV_WIDTH/2.0f, -_ENV_HEIGHT /2.0f, -_ENV_WIDTH /2.0f);
-    backBottomLeft.normal = vec3(0, 0, 1);
-    backBottomLeft.texCoord0 = vec2(0.0, _ENV_HEIGHT);
-    cpuVertexArray.push_back(backBottomLeft);
-    cpuIndexArray.push_back(1);
-    
-    Mesh::Vertex backTopRight;  // 2
-    backTopRight.position = vec3(_ENV_WIDTH /2.0f, _ENV_HEIGHT /2.0f, -_ENV_WIDTH /2.0f);
-    backTopRight.normal = vec3(0, 0, 1);
-    backTopRight.texCoord0 = vec2(_ENV_WIDTH, 0.0);
-    cpuVertexArray.push_back(backTopRight);
-    cpuIndexArray.push_back(2);
-    
-    cpuIndexArray.push_back(2);  // Dupe backTopRight
-    cpuIndexArray.push_back(1);  // Dupe backBottomLeft
-    
-    Mesh::Vertex backBottomRight;  // 3
-    backBottomRight.position = vec3(_ENV_WIDTH /2.0f, -_ENV_HEIGHT /2.0f, -_ENV_WIDTH /2.0f);
-    backBottomRight.normal = vec3(0, 0, 1);
-    backBottomRight.texCoord0 = vec2(_ENV_WIDTH, _ENV_HEIGHT);
-    cpuVertexArray.push_back(backBottomRight);
-    cpuIndexArray.push_back(3);
-    
-    Mesh::Vertex backTopRight2;  // 4
-    backTopRight2.position = vec3(_ENV_WIDTH /2.0f, _ENV_HEIGHT /2.0f, -_ENV_WIDTH /2.0f);
-    backTopRight2.normal = vec3(-1, 0, 0);
-    backTopRight2.texCoord0 = vec2(0, 0);
-    cpuVertexArray.push_back(backTopRight2);
-    cpuIndexArray.push_back(4);
-    
-    Mesh::Vertex backBottomRight2;  // 5
-    backBottomRight2.position = vec3(_ENV_WIDTH /2.0f, -_ENV_HEIGHT /2.0f, -_ENV_WIDTH /2.0f);
-    backBottomRight2.normal = vec3(-1, 0, 0);
-    backBottomRight2.texCoord0 = vec2(0.0, _ENV_HEIGHT);
-    cpuVertexArray.push_back(backBottomRight2);
-    cpuIndexArray.push_back(5);
-    
-    Mesh::Vertex frontTopRight;  // 6
-    frontTopRight.position = vec3(_ENV_WIDTH /2.0f, _ENV_HEIGHT /2.0f, _ENV_WIDTH /2.0f);
-    frontTopRight.normal = vec3(-1, 0, 0);
-    frontTopRight.texCoord0 = vec2(_ENV_WIDTH, 0.0);
-    cpuVertexArray.push_back(frontTopRight);
-    cpuIndexArray.push_back(6);
-    
-    cpuIndexArray.push_back(6);  // Dupe backTopRight
-    cpuIndexArray.push_back(5);  // Dupe backBottomLeft
-    
-    Mesh::Vertex frontBottomRight;  // 7
-    frontBottomRight.position = vec3(_ENV_WIDTH /2.0f, -_ENV_HEIGHT /2.0f, _ENV_WIDTH /2.0f);
-    frontBottomRight.normal = vec3(-1, 0, 0);
-    frontBottomRight.texCoord0 = vec2(_ENV_WIDTH, _ENV_HEIGHT);
-    cpuVertexArray.push_back(frontBottomRight);
-    cpuIndexArray.push_back(7);
-    
-    Mesh::Vertex frontTopRight2;  // 8
-    frontTopRight2.position = vec3(_ENV_WIDTH /2.0f, _ENV_HEIGHT /2.0f, _ENV_WIDTH /2.0f);
-    frontTopRight2.normal = vec3(0, 0, -1);
-    frontTopRight2.texCoord0 = vec2(0.0, 0.0);
-    cpuVertexArray.push_back(frontTopRight2);
-    cpuIndexArray.push_back(8);
-    
-    Mesh::Vertex frontBottomRight2;  // 9
-    frontBottomRight2.position = vec3(_ENV_WIDTH /2.0f, -_ENV_HEIGHT /2.0f, _ENV_WIDTH /2.0f);
-    frontBottomRight2.normal = vec3(0, 0, -1);
-    frontBottomRight2.texCoord0 = vec2(0.0, _ENV_HEIGHT);
-    cpuVertexArray.push_back(frontBottomRight2);
-    cpuIndexArray.push_back(9);
-    
-    Mesh::Vertex frontTopLeft;  // 10
-    frontTopLeft.position = vec3(-_ENV_WIDTH /2.0f, _ENV_HEIGHT /2.0f, _ENV_WIDTH /2.0f);
-    frontTopLeft.normal = vec3(0, 0, -1);
-    frontTopLeft.texCoord0 = vec2(_ENV_WIDTH, 0.0);
-    cpuVertexArray.push_back(frontTopLeft);
-    cpuIndexArray.push_back(10);
-    
-    cpuIndexArray.push_back(10);  // Dupe backTopRight
-    cpuIndexArray.push_back(9);  // Dupe backBottomLeft
-    
-    Mesh::Vertex frontBottomLeft;  // 11
-    frontBottomLeft.position = vec3(-_ENV_WIDTH /2.0f, -_ENV_HEIGHT /2.0f, _ENV_WIDTH /2.0f);
-    frontBottomLeft.normal = vec3(0, 0, -1);
-    frontBottomLeft.texCoord0 = vec2(_ENV_WIDTH, _ENV_HEIGHT);
-    cpuVertexArray.push_back(frontBottomLeft);
-    cpuIndexArray.push_back(11);
-    
-    Mesh::Vertex frontTopLeft2;  // 12
-    frontTopLeft2.position = vec3(-_ENV_WIDTH /2.0f, _ENV_HEIGHT /2.0f, _ENV_WIDTH /2.0f);
-    frontTopLeft2.normal = vec3(1, 0, 0);
-    frontTopLeft2.texCoord0 = vec2(0.0, 0.0);
-    cpuVertexArray.push_back(frontTopLeft2);
-    cpuIndexArray.push_back(12);
-    
-    Mesh::Vertex frontBottomLeft2;  // 13
-    frontBottomLeft2.position = vec3(-_ENV_WIDTH /2.0f, -_ENV_HEIGHT /2.0f, _ENV_WIDTH /2.0f);
-    frontBottomLeft2.normal = vec3(1, 0, 0);
-    frontBottomLeft2.texCoord0 = vec2(0.0, _ENV_HEIGHT);
-    cpuVertexArray.push_back(frontBottomLeft2);
-    cpuIndexArray.push_back(13);
-    
-    Mesh::Vertex backTopLeft2;  // 14
-    backTopLeft2.position = vec3(-_ENV_WIDTH /2.0f, _ENV_HEIGHT /2.0f, -_ENV_WIDTH /2.0f);
-    backTopLeft2.normal = vec3(1, 0, 0);
-    backTopLeft2.texCoord0 = vec2(_ENV_WIDTH, 0.0);
-    cpuVertexArray.push_back(backTopLeft2);
-    cpuIndexArray.push_back(14);
-    
-    cpuIndexArray.push_back(14);  // Dupe backTopRight
-    cpuIndexArray.push_back(13);  // Dupe backBottomLeft
-    
-    Mesh::Vertex backBottomLeft2;  // 15
-    backBottomLeft2.position = vec3(-_ENV_WIDTH /2.0f, -_ENV_HEIGHT /2.0f, -_ENV_WIDTH /2.0f);
-    backBottomLeft2.normal = vec3(1, 0, 0);
-    backBottomLeft2.texCoord0 = vec2(_ENV_WIDTH, _ENV_HEIGHT);
-    cpuVertexArray.push_back(backBottomLeft2);
-    cpuIndexArray.push_back(15);
-    
-    Mesh::Vertex backBottomLeft3;  // 16
-    backBottomLeft3.position = vec3(-_ENV_WIDTH /2.0f, -_ENV_HEIGHT /2.0f, -_ENV_WIDTH /2.0f);
-    backBottomLeft3.normal = vec3(0, 1, 0);
-    backBottomLeft3.texCoord0 = vec2(0.0, 0.0);
-    cpuVertexArray.push_back(backBottomLeft3);
-    cpuIndexArray.push_back(16);
-    
-    Mesh::Vertex frontBottomLeft3;  // 17
-    frontBottomLeft3.position = vec3(-_ENV_WIDTH /2.0f, -_ENV_HEIGHT /2.0f, _ENV_WIDTH /2.0f);
-    frontBottomLeft3.normal = vec3(0, 1, 0);
-    frontBottomLeft3.texCoord0 = vec2(0.0, _ENV_WIDTH);
-    cpuVertexArray.push_back(frontBottomLeft3);
-    cpuIndexArray.push_back(17);
-    
-    Mesh::Vertex backBottomRight3;  // 18
-    backBottomRight3.position = vec3(_ENV_WIDTH /2.0f, -_ENV_HEIGHT /2.0f, -_ENV_WIDTH /2.0f);
-    backBottomRight3.normal = vec3(0, 1, 0);
-    backBottomRight3.texCoord0 = vec2(_ENV_WIDTH, 0.0);
-    cpuVertexArray.push_back(backBottomRight3);
-    cpuIndexArray.push_back(18);
-    
-    cpuIndexArray.push_back(18);  // Dupe backTopRight
-    cpuIndexArray.push_back(17);  // Dupe backBottomLeft
-    
-    Mesh::Vertex frontBottomRight3;  // 19
-    frontBottomRight3.position = vec3(_ENV_WIDTH /2.0f, -_ENV_HEIGHT /2.0f, _ENV_WIDTH /2.0f);
-    frontBottomRight3.normal = vec3(0, 1, 0);
-    frontBottomRight3.texCoord0 = vec2(_ENV_WIDTH, _ENV_WIDTH);
-    cpuVertexArray.push_back(frontBottomRight3);
-    cpuIndexArray.push_back(19);
-    
+
+    //Endtest
+
+    const float EDGE_LENGTH = glm::sqrt(glm::pow(knot_vertex_prev.y - knot_vertex_curr.y, 2) + glm::pow(knot_vertex_prev.z - knot_vertex_curr.z, 2));
+
+    const int N_CAN_SIDES = 40;
+    float starting_angle = -glm::pi<float>() / 2.0;
+
+    float x_pos;
+    float z_pos;
+
+    std::vector<vec3> knot_guide_vertices_temp;
+
+    float vert_height_y = vert_displacement_y;
+    Mesh::Vertex vert;
+    int vert_count = 0;
+    for (int i = 0; i <= N_CAN_SIDES; i++) {
+        x_pos = KNOT_RADIUS * glm::cos(starting_angle);
+        z_pos = KNOT_RADIUS * glm::sin(starting_angle);
+
+        vert.position = vec3(x_pos, -knot_vertex_distance / 2.0 - vert_height_y, z_pos);
+        knot_guide_vertices_temp.push_back(vert.position);
+        vert.normal = vec3(glm::cos(starting_angle), 0, glm::sin(starting_angle));
+        vert.texCoord0 = glm::vec2(1.0 - float(i) / float(N_CAN_SIDES), 1.0);
+        cpuVertexArray.push_back(vert);
+        cpuIndexArray.push_back(vert_count++);
+
+        vert.position = vec3(x_pos, knot_vertex_distance / 2.0, z_pos);
+        knot_guide_vertices_temp.push_back(vert.position);
+        vert.normal = vec3(glm::cos(starting_angle), 0, glm::sin(starting_angle));
+        vert.texCoord0 = glm::vec2(1.0 - float(i) / float(N_CAN_SIDES), 0.0);
+        cpuVertexArray.push_back(vert);
+        cpuIndexArray.push_back(vert_count++);
+
+        starting_angle += 2 * glm::pi<float>() / (N_CAN_SIDES);
+
+        vert_height_y = vert_displacement_y * glm::sin((float)(i + 1) * glm::pi<float>() * 2.0f / N_CAN_SIDES + (glm::pi<float>() * 0.5f));
+    }
+    knot_guide_vertices = knot_guide_vertices_temp;
+
     const int numVertices = cpuVertexArray.size();
     const int cpuVertexByteSize = sizeof(Mesh::Vertex) * numVertices;
     const int cpuIndexByteSize = sizeof(int) * cpuIndexArray.size();
 
-    std::shared_ptr<Texture> tex;
-    tex = Texture::create2DTextureFromFile("images/poolTile.jpg");
-    tex->setTexParameteri(GL_TEXTURE_WRAP_S, GL_REPEAT);
-    tex->setTexParameteri(GL_TEXTURE_WRAP_T, GL_REPEAT);
-    tex->setTexParameteri(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    tex->setTexParameteri(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    textures.push_back(tex);
-
-    _wallsMesh.reset(new Mesh(textures, GL_TRIANGLES, GL_STATIC_DRAW, cpuVertexByteSize, cpuIndexByteSize, 0, cpuVertexArray, cpuIndexArray.size(), cpuIndexByteSize, &cpuIndexArray[0]));
-
-    //_wallsMesh->setMaterialColor(vec4(1.0, 1.0, 1.0, 1.0));
+    knot_guide_mesh.reset(new Mesh(textures, GL_TRIANGLE_STRIP, GL_STATIC_DRAW, cpuVertexByteSize, cpuIndexByteSize, 0, cpuVertexArray, cpuIndexArray.size(), cpuIndexByteSize, &cpuIndexArray[0]));
+    if (knot_vertex_count >= 2) {
+        updateLastEdge(vert_displacement_y);
+    }
 }
+
+void App::updateLastEdge(float vert_displacement_y) {
+    vec3 knot_vertex_prev = knot_vertices.at(knot_vertex_count - 2);
+    vec3 knot_vertex_curr = knot_vertices.at(knot_vertex_count - 1);
+    float knot_vertex_distance = glm::sqrt(glm::pow(knot_vertex_prev.y - knot_vertex_curr.y, 2) + glm::pow(knot_vertex_prev.z - knot_vertex_curr.z, 2));
+
+
+    std::vector<Mesh::Vertex> cpuVertexArray;
+    std::vector<int> cpuIndexArray;
+    std::vector<std::shared_ptr<Texture>> textures;
+
+    const float EDGE_LENGTH = glm::sqrt(glm::pow(knot_vertex_prev.y - knot_vertex_curr.y, 2) + glm::pow(knot_vertex_prev.z - knot_vertex_curr.z, 2));
+
+    const int N_CAN_SIDES = 40;
+    float starting_angle = -glm::pi<float>() / 2.0;
+
+    float x_pos;
+    float z_pos;
+
+    float vert_height_y = vert_displacement_y;
+    Mesh::Vertex vert;
+    int vert_count = 0;
+    for (int i = 0; i <= N_CAN_SIDES; i++) {
+        x_pos = KNOT_RADIUS * glm::cos(starting_angle);
+        z_pos = KNOT_RADIUS * glm::sin(starting_angle);
+
+        vert.position = last_knot_vertices.at(vert_count);
+        vert.normal = vec3(glm::cos(starting_angle), 0, glm::sin(starting_angle));
+        vert.texCoord0 = glm::vec2(1.0 - float(i) / float(N_CAN_SIDES), 0.0);
+        cpuVertexArray.push_back(vert);
+        cpuIndexArray.push_back(vert_count++);
+
+
+        vert.position = vec3(x_pos, knot_vertex_distance / 2.0 + vert_height_y, z_pos);
+        vert.normal = vec3(glm::cos(starting_angle), 0, glm::sin(starting_angle));
+        vert.texCoord0 = glm::vec2(1.0 - float(i) / float(N_CAN_SIDES), 0.0);
+        cpuVertexArray.push_back(vert);
+        cpuIndexArray.push_back(vert_count++);
+
+
+        starting_angle += 2 * glm::pi<float>() / (N_CAN_SIDES);
+        vert_height_y = vert_displacement_y * glm::sin((float)(i + 1) * glm::pi<float>() * 2.0f / N_CAN_SIDES + (glm::pi<float>() * 0.5f));
+    }
+
+    const int numVertices = cpuVertexArray.size();
+    const int cpuVertexByteSize = sizeof(Mesh::Vertex) * numVertices;
+    const int cpuIndexByteSize = sizeof(int) * cpuIndexArray.size();
+
+    std::unique_ptr<basicgraphics::Mesh> knot_guide_mesh;
+    knot_guide_mesh.reset(new Mesh(textures, GL_TRIANGLE_STRIP, GL_STATIC_DRAW, cpuVertexByteSize, cpuIndexByteSize, 0, cpuVertexArray, cpuIndexArray.size(), cpuIndexByteSize, &cpuIndexArray[0]));
+    knot_edge_meshes.at(knot_vertex_count - 2) = std::move(knot_guide_mesh);
+}
+
+void App::addGeometryEdge() {
+    std::vector<Mesh::Vertex> cpuVertexArray;
+    std::vector<int> cpuIndexArray;
+    std::vector<std::shared_ptr<Texture>> textures;
+    std::cout << "A" << std::endl;
+    vec3 knot_vertex_prev = knot_vertices.at(knot_vertex_count - 2);
+    vec3 knot_vertex_curr = knot_vertices.at(knot_vertex_count - 1);
+    std::cout << "B" << std::endl;
+
+    const float EDGE_LENGTH = glm::sqrt(glm::pow(knot_vertex_prev.y - knot_vertex_curr.y, 2) + glm::pow(knot_vertex_prev.z - knot_vertex_curr.z, 2));
+
+    const int N_CAN_SIDES = 40;
+    float starting_angle = -glm::pi<float>() / 2.0;
+
+    float x_pos;
+    float z_pos;
+
+    Mesh::Vertex vert;
+    int vert_count = 0;
+    for (int i = 0; i <= N_CAN_SIDES; i++) {
+        x_pos = KNOT_RADIUS * glm::cos(starting_angle);
+        z_pos = KNOT_RADIUS * glm::sin(starting_angle);
+
+        vert.position = vec3(x_pos, -EDGE_LENGTH / 2.0, z_pos);
+        vert.normal = vec3(glm::cos(starting_angle), 0, glm::sin(starting_angle));
+        vert.texCoord0 = glm::vec2(1.0 - float(i) / float(N_CAN_SIDES), 1.0);
+        cpuVertexArray.push_back(vert);
+        cpuIndexArray.push_back(vert_count++);
+
+        vert.position = vec3(x_pos, EDGE_LENGTH / 2.0, z_pos);
+        vert.normal = vec3(glm::cos(starting_angle), 0, glm::sin(starting_angle));
+        vert.texCoord0 = glm::vec2(1.0 - float(i) / float(N_CAN_SIDES), 0.0);
+        cpuVertexArray.push_back(vert);
+        cpuIndexArray.push_back(vert_count++);
+   
+        starting_angle += 2 * glm::pi<float>() / (N_CAN_SIDES);
+    }
+
+    const int numVertices = cpuVertexArray.size();
+    const int cpuVertexByteSize = sizeof(Mesh::Vertex) * numVertices;
+    const int cpuIndexByteSize = sizeof(int) * cpuIndexArray.size();
+
+    std::unique_ptr<basicgraphics::Mesh> knot_edge_mesh;
+    knot_edge_mesh.reset(new Mesh(textures, GL_TRIANGLE_STRIP, GL_STATIC_DRAW, cpuVertexByteSize, cpuIndexByteSize, 0, cpuVertexArray, cpuIndexArray.size(), cpuIndexByteSize, &cpuIndexArray[0]));
+    knot_edge_meshes.push_back(std::move(knot_edge_mesh));
+}
+
+void App::initializeText() {
+    int fontNormal = FONS_INVALID;
+    fs = nullptr;
+
+    fs = glfonsCreate(512, 512, FONS_ZERO_TOPLEFT);
+    if (fs == NULL) {
+        assert(false);//Could not create stash
+    }
+
+    fontNormal = fonsAddFont(fs, "sans", "DroidSansMono.ttf");
+    if (fontNormal == FONS_INVALID) {
+        assert(false);// Could not add font normal.
+    }
+
+    unsigned int white = glfonsRGBA(255, 255, 255, 255);
+
+    fonsClearState(fs);
+    fonsSetSize(fs, 20);
+    fonsSetFont(fs, fontNormal);
+    fonsSetColor(fs, white);
+    fonsSetAlign(fs, FONS_ALIGN_LEFT | FONS_ALIGN_TOP);
+
+    _textShader.compileShader("textRendering.vert", GLSLShader::VERTEX);
+    _textShader.compileShader("textRendering.frag", GLSLShader::FRAGMENT);
+    _textShader.link();
+}
+

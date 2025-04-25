@@ -3,8 +3,8 @@
 
 #include <glm/glm.hpp>
 
-#define SIZE_X 49
-#define SIZE_Y 49
+#define SIZE_X 51
+#define SIZE_Y 51
 
 class WaterShallow
 {
