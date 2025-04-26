@@ -5,12 +5,10 @@
 #include <GLSLProgram.h>
 #include <glm/glm.hpp>
 
-#define SIZE_X 51
-#define SIZE_Y 51
-
 class Node {
 public:
     Node(glm::vec3 position);
+    Node(glm::vec3 position, glm::vec3 new_color);
     ~Node(){};
 
     glm::vec3 getNodePosition();
@@ -19,11 +17,12 @@ public:
 
 
 private:
-    const float NODE_RADIUS = 1.0f;
+    const float NODE_RADIUS = 0.5f;
     const int NODE_STACKS = 20;
     const int NODE_SLICES = 40;
 
     glm::vec3 position;
+    glm::vec3 color = vec3(1.0);
 
     std::unique_ptr<basicgraphics::Mesh> meshes[20];
 

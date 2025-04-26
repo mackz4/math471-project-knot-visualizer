@@ -1,5 +1,6 @@
 #include "App.h"
 #include "Node.h"
+#include "Edge.h"
 
 #define FONTSTASH_IMPLEMENTATION
 #include <fontstash.h>
@@ -73,26 +74,26 @@ void App::onButtonDown(const VRButtonEvent &event) {
 	*/
 	string name = event.getName();
 	if (name == "MouseBtnLeft_Down") {
-        vec3 node_vertex = vec3(0.0, -(mousePosY - 512.0) / 20.48, -(mousePosX - 512.0) / 20.48);
-        if (node_vertex.y >= -25.0 && node_vertex.y <= 25.0 && node_vertex.z >= -25.0 && node_vertex.z <= 25.0) { // within screen range
+        vec3 node_position = vec3(0.0, -(mousePosY - 512.0) / 20.48, -(mousePosX - 512.0) / 20.48);
+        if (node_position.y >= -25.0 && node_position.y <= 25.0 && node_position.z >= -25.0 && node_position.z <= 25.0) { // within screen range
             if (node_count == 0) {
                 std::shared_ptr<Node> node;
-                node.reset(new Node(node_vertex));
+                node.reset(new Node(node_position, vec3(1.0, 0.0, 0.0)));
                 nodes.push_back(node);
                 node_count++;
             }
             else {
-                float edge_guide_length = glm::sqrt(glm::pow(node_vertex.y - nodes.at(node_count - 1)->getNodePosition().y, 2) + glm::pow(node_vertex.z - nodes.at(node_count - 1)->getNodePosition().z, 2));
+                float edge_guide_length = glm::sqrt(glm::pow(node_position.y - nodes.at(node_count - 1)->getNodePosition().y, 2) + glm::pow(node_position.z - nodes.at(node_count - 1)->getNodePosition().z, 2));
                 if (edge_guide_length >= NODE_EDGE_DISTANCE_MIN) {
                     std::shared_ptr<Node> node;
-                    node.reset(new Node(node_vertex));
+                    node.reset(new Node(node_position));
                     nodes.push_back(node);
                     node_count++;
 
-
-                    //std::cout << "CLIK" << std::endl;
-                    //knot_edge_meshes.push_back(std::move(knot_guide_mesh));
-                    //last_knot_vertices = knot_guide_vertices;
+                    std::shared_ptr<Edge> edge;
+                    edge.reset(new Edge(nodes.at(node_count - 2)->getNodePosition(), node_position));
+                    edges.push_back(edge);
+                    edge_count++;
                 }
             }
         }
@@ -144,19 +145,29 @@ void App::onCursorMove(const VRCursorEvent &event) {
     mousePosX = event.getPos()[0];
     mousePosY = event.getPos()[1];
 
-    vec3 knot_vertex = vec3(0.0, -(event.getPos()[1] - 512.0) / 20.48, -(event.getPos()[0] - 512.0) / 20.48);
-    if (knot_vertex_count > 0) {
-        if (knot_vertex.y >= -25.0 && knot_vertex.y <= 25.0 && knot_vertex.z >= -25.0 && knot_vertex.z <= 25.0) {
-            float knot_guide_length = glm::sqrt(glm::pow(knot_vertex.y - knot_vertices.at(knot_vertex_count - 1).y, 2) + glm::pow(knot_vertex.z - knot_vertices.at(knot_vertex_count - 1).z, 2));
-            
-            if (knot_guide_length < NODE_EDGE_DISTANCE_MIN) {
-                knot_guide_color = vec3(1.0, 0.0, 0.0);
+    vec3 node_position = vec3(0.0, -(event.getPos()[1] - 512.0) / 20.48, -(event.getPos()[0] - 512.0) / 20.48);
+    if (node_count > 0) {
+        if (node_position.y >= -25.0 && node_position.y <= 25.0 && node_position.z >= -25.0 && node_position.z <= 25.0) {
+            float edge_guide_length = glm::sqrt(glm::pow(node_position.y - nodes.at(node_count - 1)->getNodePosition().y, 2) + glm::pow(node_position.z - nodes.at(node_count - 1)->getNodePosition().z, 2));
+            if (edge_guide_length >= NODE_EDGE_DISTANCE_MIN) {
+                if (mouseDown == true) {
+                    std::shared_ptr<Node> node;
+                    node.reset(new Node(node_position));
+                    nodes.push_back(node);
+                    node_count++;
+
+                    std::shared_ptr<Edge> edge;
+                    edge.reset(new Edge(nodes.at(node_count - 2)->getNodePosition(), node_position));
+                    edges.push_back(edge);
+                    edge_count++;
+                }
+                edge_guide.reset(new Edge(nodes.at(node_count - 1)->getNodePosition(), node_position));
+                edge_guide->setColor(vec3(2.0 / 3.0, 1.0 / 3.0, 0.0));
+            } else {
+                edge_guide.reset(new Edge(nodes.at(node_count - 1)->getNodePosition(), node_position));
+                edge_guide->setColor(vec3(1.0, 0.0, 0.0));
             }
-            else {
-                knot_guide_color = vec3(1.0, 1.0, 1.0);
-            }
-            knot_guide_vertex = knot_vertex;
-            addGeometryGuide(knot_vertices.at(knot_vertex_count - 1), knot_guide_vertex, knot_guide_length);            
+
         }
     }
 
@@ -233,7 +244,6 @@ void App::onRenderGraphicsContext(const VRGraphicsState &renderState) {
 				std::cout << "Error initializing GLEW." << std::endl;
 			}
 		#endif     
-
 
         glEnable(GL_DEPTH_TEST);
         glClearDepth(1.0f);
@@ -445,6 +455,16 @@ if (knot_guide_mesh != NULL) {
     // Nodes draw
     for (size_t i = 0; i < nodes.size(); i++) {
         nodes.at(i)->draw(_environment_shader);
+    }
+
+    // Edges draw
+    for (size_t i = 0; i < edges.size(); i++) {
+        edges.at(i)->draw(_environment_shader);
+    }
+
+    // Edge guide draw
+    if (edge_guide != NULL) {
+        edge_guide->draw(_environment_shader);
     }
 
     // Draw text

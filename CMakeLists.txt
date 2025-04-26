@@ -44,6 +44,7 @@ set(header_files
   src/App.h
   src/Node.h
   src/Edge.h
+  src/Color.h
 )
 
 set(extra_files

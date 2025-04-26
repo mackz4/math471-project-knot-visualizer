@@ -1,5 +1,5 @@
-#ifndef CAUSTICS_APP_H // Changed from CAUSTICS-APP_H
-#define CAUSTICS_APP_H // Changed from CAUSTICS-APP_H
+#ifndef APP_H 
+#define APP_H
 
 #include <api/MinVR.h>
 using namespace MinVR;
@@ -30,6 +30,7 @@ using namespace MinVR;
 #endif
 
 #include "Node.h"
+#include "Edge.h"
 #include <BasicGraphics.h>
 #include <memory>
 
@@ -72,7 +73,6 @@ private:
     const float KNOT_RADIUS = 1.0f;
     const int   KNOT_STACKS = 10;
     const int   KNOT_SLICES = KNOT_STACKS * 2;
-    const float NODE_EDGE_DISTANCE_MIN = 10.0f;
 
     const glm::vec3 _LIGHT_DIRECTION = glm::vec3(0.0f, -1.0f, 0.0f);
 
@@ -132,9 +132,14 @@ private:
 
 
 
-    // 4/25
+    // 4/25, 4/26
+    const float NODE_EDGE_DISTANCE_MIN = 2.5f;
+
     std::vector<std::shared_ptr<Node>> nodes;
+    std::vector<std::shared_ptr<Edge>> edges;
+    std::shared_ptr<Edge> edge_guide;
     int node_count = 0;
+    int edge_count = 0;
 };
 
 

@@ -46,7 +46,7 @@ void main() {
     finalColor += ambientLighting + diffuseLighting + specularLighting;
 
 	// Tell OpenGL to use the r,g,b compenents of finalColor for the color of this fragment (pixel).
-	fragColor.rgb = mix(materialColor, finalColor, 0.5);
+	fragColor.rgb = mix(materialColor, finalColor, 0.6);
 
 	// And, set the alpha component to 1.0 (completely opaque, no transparency).
 	fragColor.a = 1.0;
