@@ -4,6 +4,7 @@
 #include <BasicGraphics.h>
 #include <GLSLProgram.h>
 #include <glm/glm.hpp>
+#include "Color.h"
 
 class Knot {
 public:
@@ -31,8 +32,8 @@ private:
     std::shared_ptr<Node> node_guide;
     std::shared_ptr<Edge> edge_guide;
 
-    float component_mix = 0.4f;
-    vec3 color = vec3(0.0f);
+    float component_mix = 0.2f;
+    vec3 color = COLOR_WHITE;
 
     int node_count = 0;
     int edge_count = 0;

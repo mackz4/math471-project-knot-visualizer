@@ -133,13 +133,13 @@ private:
 
 
     // 4/25, 4/26
-    const float KNOT_SPACING_DIST_MIN = 5.0f;
+    const float KNOT_SPACING_DIST_MIN = 2.5f;
     const float KNOT_CONNECTION_DIST_MAX = 1.0f;
 
 
     std::vector<std::shared_ptr<Knot>> knots;
     std::shared_ptr<Knot> knot_curr;
-    const glm::vec3 knot_color_index[4] = {COLOR_CGA_BROWN, COLOR_CGA_CYAN, COLOR_CGA_MAGENTA, COLOR_CGA_GREEN};
+    const glm::vec3 knot_color_index[3] = {COLOR_BLUE, COLOR_GREEN, COLOR_MAGENTA};
     int knot_count = 0;
     int node_total_count = 0;
     bool isCloseToEnd = false;

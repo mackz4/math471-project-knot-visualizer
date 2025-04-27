@@ -2,6 +2,7 @@
 #define EDGE_H
 
 #include <BasicGraphics.h>
+#include "Color.h"
 #include <GLSLProgram.h>
 #include <glm/glm.hpp>
 
@@ -21,7 +22,7 @@ private:
 
     glm::vec3 position_prev;
     glm::vec3 position_curr;
-    glm::vec3 color = vec3(0.0);
+    glm::vec3 color = COLOR_WHITE;
 
     std::unique_ptr<basicgraphics::Mesh> mesh;
 
