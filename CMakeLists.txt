@@ -38,12 +38,14 @@ set(source_files
   src/App.cpp
   src/Node.cpp
   src/Edge.cpp
+  src/Knot.cpp
 )
 
 set(header_files
   src/App.h
   src/Node.h
   src/Edge.h
+  src/Knot.h
   src/Color.h
 )
 

@@ -6,14 +6,12 @@ using namespace glm;
 using namespace basicgraphics;
 
 Node::Node(glm::vec3 new_vertex) {
-
     position = new_vertex;
 
     setupGeometry();
 }
 
 Node::Node(glm::vec3 new_vertex, glm::vec3 new_color) {
-
     position = new_vertex;
     color = new_color;
 
@@ -42,22 +40,20 @@ void Node::setupGeometry() {
         std::vector<std::shared_ptr<Texture>> textures;
 
         for (int j = 0; j <= NODE_SLICES; j++) {
-            float offset = glm::pi<float>() / 1.0;
-            xPos = position.x + NODE_RADIUS * cos(latitude) * cos(longitude);
+            xPos = NODE_OFFSET + position.x + NODE_RADIUS * cos(latitude) * cos(longitude);
             yPos = position.y + NODE_RADIUS * sin(latitude);
             zPos = position.z + NODE_RADIUS * cos(latitude) * sin(longitude);
-
             vert.position = vec3(xPos, yPos, zPos);
-            vert.normal = vec3(xPos - position.x, yPos - position.y, zPos - position.z);
+            vert.normal = vec3(cos(latitude) * cos(longitude), sin(latitude), cos(latitude) * sin(longitude));
             cpuVertexArray.push_back(vert);
             cpuIndexArray.push_back(vert_count++);
 
-            xPos = position.x + NODE_RADIUS * cos(latitude - (glm::pi<float>() / NODE_STACKS)) * cos(longitude);
+            xPos = NODE_OFFSET + position.x + NODE_RADIUS * cos(latitude - (glm::pi<float>() / NODE_STACKS)) * cos(longitude);
             yPos = position.y + NODE_RADIUS * sin(latitude - (glm::pi<float>() / NODE_STACKS));
             zPos = position.z + NODE_RADIUS * cos(latitude - (glm::pi<float>() / NODE_STACKS)) * sin(longitude);
 
             vert.position = vec3(xPos, yPos, zPos);
-            vert.normal = vec3(xPos - position.x, yPos - position.y, zPos - position.z);
+            vert.normal = vec3(cos(latitude - (glm::pi<float>() / NODE_STACKS)) * cos(longitude), sin(latitude - (glm::pi<float>() / NODE_STACKS)), cos(latitude - (glm::pi<float>() / NODE_STACKS)) * sin(longitude));
             cpuVertexArray.push_back(vert);
             cpuIndexArray.push_back(vert_count++);
 
@@ -74,7 +70,12 @@ void Node::setupGeometry() {
 
 }
 
+void Node::setColor(vec3 new_color) {
+    color = new_color;
+}
+
 void Node::draw(GLSLProgram &shader) {
+    shader.setUniform("model_mat", mat4(1.0f));
     shader.setUniform("materialColor", color);
 
     for (int i = 0; i < 20; i++) {

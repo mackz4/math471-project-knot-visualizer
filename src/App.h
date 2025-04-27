@@ -31,6 +31,8 @@ using namespace MinVR;
 
 #include "Node.h"
 #include "Edge.h"
+#include "Knot.h"
+#include "Color.h"
 #include <BasicGraphics.h>
 #include <memory>
 
@@ -73,8 +75,6 @@ private:
     const float KNOT_RADIUS = 1.0f;
     const int   KNOT_STACKS = 10;
     const int   KNOT_SLICES = KNOT_STACKS * 2;
-
-    const glm::vec3 _LIGHT_DIRECTION = glm::vec3(0.0f, -1.0f, 0.0f);
 
     float _CAMERA_RADIUS = 25.0f;
     const float _CAMERA_SENSITIVITY = 0.15f;
@@ -133,13 +133,17 @@ private:
 
 
     // 4/25, 4/26
-    const float NODE_EDGE_DISTANCE_MIN = 2.5f;
+    const float KNOT_SPACING_DIST_MIN = 5.0f;
+    const float KNOT_CONNECTION_DIST_MAX = 1.0f;
 
-    std::vector<std::shared_ptr<Node>> nodes;
-    std::vector<std::shared_ptr<Edge>> edges;
-    std::shared_ptr<Edge> edge_guide;
-    int node_count = 0;
-    int edge_count = 0;
+
+    std::vector<std::shared_ptr<Knot>> knots;
+    std::shared_ptr<Knot> knot_curr;
+    const glm::vec3 knot_color_index[4] = {COLOR_CGA_BROWN, COLOR_CGA_CYAN, COLOR_CGA_MAGENTA, COLOR_CGA_GREEN};
+    int knot_count = 0;
+    int node_total_count = 0;
+    bool isCloseToEnd = false;
+    bool isShadersEnabled = true;
 };
 
 

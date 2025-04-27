@@ -1,5 +1,6 @@
 #include "App.h"
 #include "Node.h"
+#include "Knot.h"
 #include "Edge.h"
 
 #define FONTSTASH_IMPLEMENTATION
@@ -31,6 +32,13 @@ App::App(int argc, char** argv) : VRApp(argc, argv)
 
 	mouseDown = false;
     mouseRightDown = false;
+
+    //Test Knot init
+    std::shared_ptr<Knot> knot;
+    knot.reset(new Knot(knot_color_index[knot_count]));
+    knots.push_back(knot);
+    knot_curr = knots.at(knot_count);
+    //Test Knot init end
 }
 
 App::~App()
@@ -73,27 +81,48 @@ void App::onButtonDown(const VRButtonEvent &event) {
     }
 	*/
 	string name = event.getName();
+    std::cout << name << std::endl;
 	if (name == "MouseBtnLeft_Down") {
-        vec3 node_position = vec3(0.0, -(mousePosY - 512.0) / 20.48, -(mousePosX - 512.0) / 20.48);
-        if (node_position.y >= -25.0 && node_position.y <= 25.0 && node_position.z >= -25.0 && node_position.z <= 25.0) { // within screen range
-            if (node_count == 0) {
+        vec3 node_position_curr = vec3(0.0, -(mousePosY - 512.0) / 20.48, -(mousePosX - 512.0) / 20.48);
+        if (node_position_curr.y >= -25.0 && node_position_curr.y <= 25.0 && node_position_curr.z >= -25.0 && node_position_curr.z <= 25.0) { // within screen range      
+            if (knot_curr->getNodeCount() == 0) {
                 std::shared_ptr<Node> node;
-                node.reset(new Node(node_position, vec3(1.0, 0.0, 0.0)));
-                nodes.push_back(node);
-                node_count++;
-            }
-            else {
-                float edge_guide_length = glm::sqrt(glm::pow(node_position.y - nodes.at(node_count - 1)->getNodePosition().y, 2) + glm::pow(node_position.z - nodes.at(node_count - 1)->getNodePosition().z, 2));
-                if (edge_guide_length >= NODE_EDGE_DISTANCE_MIN) {
-                    std::shared_ptr<Node> node;
-                    node.reset(new Node(node_position));
-                    nodes.push_back(node);
-                    node_count++;
-
+                node.reset(new Node(node_position_curr, COLOR_CGA_YELLOW));
+                knot_curr->addNode(node);
+                knot_curr->incNodeCount();
+            } else {
+                float knot_connection_dist = glm::sqrt(glm::pow(node_position_curr.y - knot_curr->getNodes().at(0)->getNodePosition().y, 2) + glm::pow(node_position_curr.z - knot_curr->getNodes().at(0)->getNodePosition().z, 2));
+                if (knot_connection_dist < KNOT_CONNECTION_DIST_MAX) {
                     std::shared_ptr<Edge> edge;
-                    edge.reset(new Edge(nodes.at(node_count - 2)->getNodePosition(), node_position));
-                    edges.push_back(edge);
-                    edge_count++;
+                    edge.reset(new Edge(knot_curr->getNodes().at(knot_curr->getNodeCount() - 1)->getNodePosition(), knot_curr->getNodes().at(0)->getNodePosition(), knot_color_index[knot_count]));
+                    knot_curr->addEdge(edge);
+                    knot_curr->incEdgeCount();
+                    knot_curr->setNodeGuide(NULL);
+                    knot_curr->setEdgeGuide(NULL);
+                    knot_curr->getNodes().at(0)->setColor(COLOR_CGA_WHITE);
+                    
+                    knot_count++;
+                    std::shared_ptr<Knot> knot;
+                    knot.reset(new Knot(knot_color_index[knot_count]));
+                    knots.push_back(knot);
+                    knot_curr = knots.at(knot_count);
+                    isCloseToEnd = false;
+                }
+                else {
+                    float edge_guide_length = glm::sqrt(glm::pow(node_position_curr.y - knot_curr->getNodes().at(knot_curr->getNodeCount() - 1)->getNodePosition().y, 2) + glm::pow(node_position_curr.z - knot_curr->getNodes().at(knot_curr->getNodeCount() - 1)->getNodePosition().z, 2));
+                    if (edge_guide_length >= KNOT_SPACING_DIST_MIN) {
+                        knot_curr->getNodeGuide()->setColor(COLOR_CGA_WHITE);
+
+                        std::shared_ptr<Node> node;
+                        node.reset(new Node(node_position_curr, COLOR_CGA_WHITE));
+                        knot_curr->addNode(node);
+                        knot_curr->incNodeCount();
+
+                        std::shared_ptr<Edge> edge;
+                        edge.reset(new Edge(knot_curr->getNodes().at(knot_curr->getNodeCount() - 2)->getNodePosition(), node_position_curr, knot_color_index[knot_count]));
+                        knot_curr->addEdge(edge);
+                        knot_curr->incEdgeCount();
+                    }
                 }
             }
         }
@@ -123,6 +152,23 @@ void App::onButtonDown(const VRButtonEvent &event) {
         }
         is_painting = !is_painting;
     }
+    else if (name == "KbdF1_Down") {
+        if (isShadersEnabled == true) {
+            std::cout << "Set to false" << std::endl;
+            isShadersEnabled = false;
+            for (size_t i = 0; i < knots.size(); i++) {
+                knots.at(i)->setComponentMix(0.0f);
+            }
+        }
+        else {
+            isShadersEnabled = true;
+            std::cout << "Set to true" << std::endl;
+            for (size_t i = 0; i < knots.size(); i++) {
+                knots.at(i)->setComponentMix(0.4f);
+            }
+        }
+
+    }
 }
 
 void App::onButtonUp(const VRButtonEvent &event) {
@@ -132,6 +178,23 @@ void App::onButtonUp(const VRButtonEvent &event) {
 	//std::cout << "ButtonUp: " << event.getName() << std::endl;
 	if (event.getName() == "MouseBtnLeft_Up") {
 		mouseDown = false;
+        if (isCloseToEnd == true) {
+            std::shared_ptr<Edge> edge;
+            edge.reset(new Edge(knot_curr->getNodes().at(knot_curr->getNodeCount() - 1)->getNodePosition(), knot_curr->getNodes().at(0)->getNodePosition(), knot_color_index[knot_count]));
+            knot_curr->addEdge(edge);
+            knot_curr->incEdgeCount();
+            knot_curr->setNodeGuide(NULL);
+            knot_curr->setEdgeGuide(NULL);
+            knot_curr->getNodes().at(0)->setColor(COLOR_CGA_WHITE);
+
+            knot_count++;
+            std::shared_ptr<Knot> knot;
+            knot.reset(new Knot(knot_color_index[knot_count]));
+            knots.push_back(knot);
+
+            knot_curr = knots.at(knot_count);
+            isCloseToEnd = false;
+        }
 	}
     else if (event.getName() == "MouseBtnRight_Up") {
         mouseRightDown = false;
@@ -146,26 +209,62 @@ void App::onCursorMove(const VRCursorEvent &event) {
     mousePosY = event.getPos()[1];
 
     vec3 node_position = vec3(0.0, -(event.getPos()[1] - 512.0) / 20.48, -(event.getPos()[0] - 512.0) / 20.48);
-    if (node_count > 0) {
-        if (node_position.y >= -25.0 && node_position.y <= 25.0 && node_position.z >= -25.0 && node_position.z <= 25.0) {
-            float edge_guide_length = glm::sqrt(glm::pow(node_position.y - nodes.at(node_count - 1)->getNodePosition().y, 2) + glm::pow(node_position.z - nodes.at(node_count - 1)->getNodePosition().z, 2));
-            if (edge_guide_length >= NODE_EDGE_DISTANCE_MIN) {
-                if (mouseDown == true) {
-                    std::shared_ptr<Node> node;
-                    node.reset(new Node(node_position));
-                    nodes.push_back(node);
-                    node_count++;
 
-                    std::shared_ptr<Edge> edge;
-                    edge.reset(new Edge(nodes.at(node_count - 2)->getNodePosition(), node_position));
-                    edges.push_back(edge);
-                    edge_count++;
+    std::shared_ptr<Node> node_guide;
+    node_guide.reset(new Node(vec3(node_position.x + 3.0f, node_position.y, node_position.z), COLOR_CGA_YELLOW));
+    knot_curr->setNodeGuide(node_guide);
+
+    if (knot_curr->getNodeCount() > 0) {
+        if (node_position.y >= -25.0 && node_position.y <= 25.0 && node_position.z >= -25.0 && node_position.z <= 25.0) {
+            float knot_connection_dist = glm::sqrt(glm::pow(node_position.y - knot_curr->getNodes().at(0)->getNodePosition().y, 2) + glm::pow(node_position.z - knot_curr->getNodes().at(0)->getNodePosition().z, 2));
+            if (knot_connection_dist < KNOT_CONNECTION_DIST_MAX) {
+                std::shared_ptr<Edge> edge_guide;
+                edge_guide.reset(new Edge(knot_curr->getNodes().at(knot_curr->getNodeCount() - 1)->getNodePosition(), knot_curr->getNodes().at(0)->getNodePosition(), COLOR_CGA_YELLOW));
+                knot_curr->setEdgeGuide(edge_guide);
+
+                std::shared_ptr<Node> node_guide;
+                node_guide.reset(new Node(knot_curr->getNodes().at(0)->getNodePosition(), COLOR_CGA_YELLOW));
+                knot_curr->setNodeGuide(node_guide);
+
+                isCloseToEnd = true;
+
+                float edge_guide_length = glm::sqrt(glm::pow(node_position.y - knot_curr->getNodes().at(knot_curr->getNodeCount() - 1)->getNodePosition().y, 2) + glm::pow(node_position.z - knot_curr->getNodes().at(knot_curr->getNodeCount() - 1)->getNodePosition().z, 2));
+                if (edge_guide_length >= KNOT_SPACING_DIST_MIN) {
+                    if (mouseDown == true) {
+                        std::shared_ptr<Node> node;
+                        node.reset(new Node(node_position, COLOR_CGA_WHITE));
+                        knot_curr->addNode(node);
+                        knot_curr->incNodeCount();
+
+                        std::shared_ptr<Edge> edge;
+                        edge.reset(new Edge(knot_curr->getNodes().at(knot_curr->getNodeCount() - 2)->getNodePosition(), node_position, knot_color_index[knot_count]));
+                        knot_curr->addEdge(edge);
+                        knot_curr->incEdgeCount();
+                    } 
                 }
-                edge_guide.reset(new Edge(nodes.at(node_count - 1)->getNodePosition(), node_position));
-                edge_guide->setColor(vec3(2.0 / 3.0, 1.0 / 3.0, 0.0));
-            } else {
-                edge_guide.reset(new Edge(nodes.at(node_count - 1)->getNodePosition(), node_position));
-                edge_guide->setColor(vec3(1.0, 0.0, 0.0));
+            } else {  
+                isCloseToEnd = false;
+                float edge_guide_length = glm::sqrt(glm::pow(node_position.y - knot_curr->getNodes().at(knot_curr->getNodeCount() - 1)->getNodePosition().y, 2) + glm::pow(node_position.z - knot_curr->getNodes().at(knot_curr->getNodeCount() - 1)->getNodePosition().z, 2));
+                if (edge_guide_length >= KNOT_SPACING_DIST_MIN) {
+                    if (mouseDown == true) {
+                        std::shared_ptr<Node> node;
+                        node.reset(new Node(node_position, COLOR_CGA_WHITE));
+                        knot_curr->addNode(node);
+                        knot_curr->incNodeCount();
+
+                        std::shared_ptr<Edge> edge;
+                        edge.reset(new Edge(knot_curr->getNodes().at(knot_curr->getNodeCount() - 2)->getNodePosition(), node_position, knot_color_index[knot_count]));
+                        knot_curr->addEdge(edge);
+                        knot_curr->incEdgeCount();
+                    }
+                    std::shared_ptr<Edge> edge_guide;
+                    edge_guide.reset(new Edge(knot_curr->getNodes().at(knot_curr->getNodeCount() - 1)->getNodePosition(), node_position, knot_color_index[knot_count]));
+                    knot_curr->setEdgeGuide(edge_guide);
+                } else {
+                    std::shared_ptr<Edge> edge_guide;
+                    edge_guide.reset(new Edge(knot_curr->getNodes().at(knot_curr->getNodeCount() - 1)->getNodePosition(), node_position, COLOR_CGA_RED));
+                    knot_curr->setEdgeGuide(edge_guide);
+                }
             }
 
         }
@@ -336,7 +435,7 @@ _shader.setUniform("eye_world", eye_world);
 
 
 // Set Uniforms
-_shader.setUniform("light_direction", _LIGHT_DIRECTION);
+//_shader.setUniform("light_direction", _LIGHT_DIRECTION);
 
 // Set Uniforms
 
@@ -373,7 +472,7 @@ vec3 diffuseLightIntensity = vec3(0.6, 0.6, 0.6);
 vec3 specularLightIntensity = vec3(1.0, 1.0, 1.0);
 
 _environment_shader.setUniform("materialColor", materialColor);
-_environment_shader.setUniform("lightDirection", _LIGHT_DIRECTION);
+//_environment_shader.setUniform("lightDirection", _LIGHT_DIRECTION);
 
 _environment_shader.setUniform("ambientReflectionCoeff", ambientReflectionCoeff);
 _environment_shader.setUniform("diffuseReflectionCoeff", diffuseReflectionCoeff);
@@ -452,27 +551,35 @@ if (knot_guide_mesh != NULL) {
     }
     */
 
-    // Nodes draw
-    for (size_t i = 0; i < nodes.size(); i++) {
-        nodes.at(i)->draw(_environment_shader);
-    }
-
-    // Edges draw
-    for (size_t i = 0; i < edges.size(); i++) {
-        edges.at(i)->draw(_environment_shader);
-    }
-
-    // Edge guide draw
-    if (edge_guide != NULL) {
-        edge_guide->draw(_environment_shader);
-    }
+    // Knots draw   
+    for (size_t i = 0; i < knots.size(); i++) {
+        knots.at(i)->draw(_environment_shader);
+    } 
 
     // Draw text
     double deltaTime = _curFrameTime - _lastTime;
-    std::string fps = "FPS: " + std::to_string(1.0 / deltaTime);
-    drawText(fps, 10, 10, windowHeight, windowWidth);
-    std::string node_count_text = "Nodes: " + std::to_string(node_count);
-    drawText(node_count_text, 10, 30, windowHeight, windowWidth);
+
+    fonsSetColor(fs, glfonsRGBA(255, 255, 255, 255));
+    std::string title_text = "Knot Visualizer";
+    drawText(title_text, 10, 10, windowHeight, windowWidth);
+    fonsSetAlign(fs, FONS_ALIGN_RIGHT | FONS_ALIGN_TOP);
+    std::string fps_text = "fps";
+    drawText(fps_text, windowWidth - 10, 10, windowHeight, windowWidth);
+    fonsSetAlign(fs, FONS_ALIGN_LEFT | FONS_ALIGN_TOP);
+    std::string knot_count_text = "Knots:";
+    drawText(knot_count_text, 10, 30, windowHeight, windowWidth);
+    std::string node_total_count_text = "Nodes:";
+    drawText(node_total_count_text, 10, 50, windowHeight, windowWidth);
+
+    fonsSetColor(fs, glfonsRGBA(255, 255, 0, 255));
+    fonsSetAlign(fs, FONS_ALIGN_RIGHT | FONS_ALIGN_TOP);
+    std::string fps_text_2 = std::to_string(1.0 / deltaTime) + "    ";
+    drawText(fps_text_2, windowWidth - 10, 10, windowHeight, windowWidth);
+    fonsSetAlign(fs, FONS_ALIGN_LEFT | FONS_ALIGN_TOP);
+    std::string knot_count_text_2 = "       " + std::to_string(knot_count);
+    drawText(knot_count_text_2, 10, 30, windowHeight, windowWidth);
+    std::string node_total_count_text_2 = "       " + std::to_string(node_total_count);
+    drawText(node_total_count_text_2, 10, 50, windowHeight, windowWidth);
 }
 
 void App::drawText(const std::string text, float xPos, float yPos, GLfloat windowHeight, GLfloat windowWidth) {
@@ -690,15 +797,15 @@ void App::initializeText() {
         assert(false);//Could not create stash
     }
 
-    fontNormal = fonsAddFont(fs, "sans", "DroidSansMono.ttf");
+    fontNormal = fonsAddFont(fs, "sans", "templeos_font.ttf");
     if (fontNormal == FONS_INVALID) {
         assert(false);// Could not add font normal.
     }
 
-    unsigned int white = glfonsRGBA(255, 255, 255, 255);
+    unsigned int white = glfonsRGBA(0, 0, 85, 255);
 
     fonsClearState(fs);
-    fonsSetSize(fs, 20);
+    fonsSetSize(fs, 16);
     fonsSetFont(fs, fontNormal);
     fonsSetColor(fs, white);
     fonsSetAlign(fs, FONS_ALIGN_LEFT | FONS_ALIGN_TOP);
@@ -707,4 +814,3 @@ void App::initializeText() {
     _textShader.compileShader("textRendering.frag", GLSLShader::FRAGMENT);
     _textShader.link();
 }
-

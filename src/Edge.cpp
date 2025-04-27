@@ -13,6 +13,15 @@ Edge::Edge(glm::vec3 node_position_prev, glm::vec3 node_position_curr) {
     setupGeometry();
 }
 
+Edge::Edge(glm::vec3 node_position_prev, glm::vec3 node_position_curr, glm::vec3 new_color) {
+
+    position_prev = node_position_prev;
+    position_curr = node_position_curr;
+    color = new_color;
+
+    setupGeometry();
+}
+
 void Edge::setupGeometry() {
     std::vector<Mesh::Vertex> cpuVertexArray;
     std::vector<int> cpuIndexArray;
