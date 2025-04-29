@@ -14,6 +14,8 @@ public:
 
     void setupGeometry();
     void setColor(vec3 new_color);
+    vec3 getPositionPrev();
+    vec3 getPositionCurr();
     void draw(basicgraphics::GLSLProgram& shader);
 
 private:

@@ -62,6 +62,14 @@ void Edge::setupGeometry() {
     mesh.reset(new Mesh(textures, GL_TRIANGLE_STRIP, GL_STATIC_DRAW, cpuVertexByteSize, cpuIndexByteSize, 0, cpuVertexArray, cpuIndexArray.size(), cpuIndexByteSize, &cpuIndexArray[0]));
 }
 
+vec3 Edge::getPositionPrev() {
+    return position_prev;
+}
+
+vec3 Edge::getPositionCurr() {
+    return position_curr;
+}
+
 void Edge::setColor(vec3 new_color) {
     color = new_color;
 }

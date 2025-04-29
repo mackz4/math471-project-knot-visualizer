@@ -32,7 +32,7 @@ private:
     std::shared_ptr<Node> node_guide;
     std::shared_ptr<Edge> edge_guide;
 
-    float component_mix = 0.2f;
+    float component_mix = 0.3f;
     vec3 color = COLOR_WHITE;
 
     int node_count = 0;

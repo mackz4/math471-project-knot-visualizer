@@ -133,7 +133,7 @@ private:
 
 
     // 4/25, 4/26
-    const float KNOT_SPACING_DIST_MIN = 2.5f;
+    const float KNOT_SPACING_DIST_MIN = 1.5f;
     const float KNOT_CONNECTION_DIST_MAX = 1.0f;
 
 
@@ -142,8 +142,13 @@ private:
     const glm::vec3 knot_color_index[3] = {COLOR_BLUE, COLOR_GREEN, COLOR_MAGENTA};
     int knot_count = 0;
     int node_total_count = 0;
-    bool isCloseToEnd = false;
     bool isShadersEnabled = true;
+    bool isDebugEnabled = true;
+    bool canNodeBePlaced = true;
+    bool canKnotBeConnected = false;
+
+    float calcEdgeDistNearest(vec3 node_cursor_position);
+    void drawFancyKnots();
 };
 
 
