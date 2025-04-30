@@ -17,6 +17,7 @@ public:
     int getEdgeCount();
     void addNode(std::shared_ptr<Node> node);
     void addEdge(std::shared_ptr<Edge> edge);
+    void addIntersectionNode(std::shared_ptr<Node> intersection_node);
     void setNodeGuide(std::shared_ptr<Node> new_node_guide);
     void setEdgeGuide(std::shared_ptr<Edge> new_edge_guide);
     void setComponentMix(float new_component_mix);
@@ -29,6 +30,7 @@ public:
 private:
     std::vector<std::shared_ptr<Node>> nodes;
     std::vector<std::shared_ptr<Edge>> edges;
+    std::vector<std::shared_ptr<Node>> intersection_nodes;
     std::shared_ptr<Node> node_guide;
     std::shared_ptr<Edge> edge_guide;
 

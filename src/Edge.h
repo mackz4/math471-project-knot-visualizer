@@ -19,7 +19,7 @@ public:
     void draw(basicgraphics::GLSLProgram& shader);
 
 private:
-    const float EDGE_RADIUS = 0.5f;
+    const float EDGE_RADIUS = 0.6f; //0.5
     const int N_EDGE_SIDES = 40;
 
     glm::vec3 position_prev;

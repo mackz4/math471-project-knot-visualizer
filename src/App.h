@@ -133,13 +133,14 @@ private:
 
 
     // 4/25, 4/26
-    const float KNOT_SPACING_DIST_MIN = 1.5f;
+    const float KNOT_SPACING_DIST_MIN = 3.0f; //1.5
     const float KNOT_CONNECTION_DIST_MAX = 1.0f;
 
 
     std::vector<std::shared_ptr<Knot>> knots;
     std::shared_ptr<Knot> knot_curr;
     const glm::vec3 knot_color_index[3] = {COLOR_BLUE, COLOR_GREEN, COLOR_MAGENTA};
+    glm::vec3 node_cursor_position;
     int knot_count = 0;
     int node_total_count = 0;
     bool isShadersEnabled = true;
@@ -148,6 +149,7 @@ private:
     bool canKnotBeConnected = false;
 
     float calcEdgeDistNearest(vec3 node_cursor_position);
+    void calcEdgeIntersection();
     void drawFancyKnots();
 };
 

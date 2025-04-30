@@ -19,7 +19,7 @@ public:
 
 
 private:
-    const float NODE_RADIUS = 0.5f;
+    const float NODE_RADIUS = 0.6f; //0.5
     const float NODE_OFFSET = 3.0f;
     const int NODE_STACKS = 20;
     const int NODE_SLICES = 40;
