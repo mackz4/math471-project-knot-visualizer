@@ -18,6 +18,14 @@ Node::Node(glm::vec3 new_vertex, glm::vec3 new_color) {
     setupGeometry();
 }
 
+Node::Node(glm::vec3 new_vertex, float new_offset, glm::vec3 new_color) {
+    position = new_vertex;
+    offset = new_offset;
+    color = new_color;
+
+    setupGeometry();
+}
+
 glm::vec3 Node::getNodePosition() {
     return position;
 }
@@ -40,17 +48,17 @@ void Node::setupGeometry() {
         std::vector<std::shared_ptr<Texture>> textures;
 
         for (int j = 0; j <= NODE_SLICES; j++) {
-            xPos = NODE_OFFSET + position.x + NODE_RADIUS * cos(latitude) * cos(longitude);
+            xPos = position.x + NODE_RADIUS * cos(latitude) * cos(longitude);
             yPos = position.y + NODE_RADIUS * sin(latitude);
-            zPos = position.z + NODE_RADIUS * cos(latitude) * sin(longitude);
+            zPos = (3.0f + offset) + position.z + NODE_RADIUS * cos(latitude) * sin(longitude);
             vert.position = vec3(xPos, yPos, zPos);
             vert.normal = vec3(cos(latitude) * cos(longitude), sin(latitude), cos(latitude) * sin(longitude));
             cpuVertexArray.push_back(vert);
             cpuIndexArray.push_back(vert_count++);
 
-            xPos = NODE_OFFSET + position.x + NODE_RADIUS * cos(latitude - (glm::pi<float>() / NODE_STACKS)) * cos(longitude);
+            xPos = position.x + NODE_RADIUS * cos(latitude - (glm::pi<float>() / NODE_STACKS)) * cos(longitude);
             yPos = position.y + NODE_RADIUS * sin(latitude - (glm::pi<float>() / NODE_STACKS));
-            zPos = position.z + NODE_RADIUS * cos(latitude - (glm::pi<float>() / NODE_STACKS)) * sin(longitude);
+            zPos = (3.0f + offset) + position.z + NODE_RADIUS * cos(latitude - (glm::pi<float>() / NODE_STACKS)) * sin(longitude);
 
             vert.position = vec3(xPos, yPos, zPos);
             vert.normal = vec3(cos(latitude - (glm::pi<float>() / NODE_STACKS)) * cos(longitude), sin(latitude - (glm::pi<float>() / NODE_STACKS)), cos(latitude - (glm::pi<float>() / NODE_STACKS)) * sin(longitude));

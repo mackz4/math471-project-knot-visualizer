@@ -17,9 +17,6 @@ void Knot::addEdge(std::shared_ptr<Edge> edge) {
     edges.push_back(edge);
 }
 
-void Knot::addIntersectionNode(std::shared_ptr<Node> intersection_node) {
-    intersection_nodes.push_back(intersection_node);
-}
 void Knot::setNodeGuide(std::shared_ptr<Node> new_node_guide) {
     node_guide = new_node_guide;
 }
@@ -79,9 +76,9 @@ void Knot::draw(GLSLProgram& shader) {
     }
 
     // Intersection nodes draw
-    for (size_t i = 0; i < intersection_nodes.size(); i++) {
-        intersection_nodes.at(i)->draw(shader);
-    }
+    //for (size_t i = 0; i < intersection_nodes.size(); i++) {
+    //    intersection_nodes.at(i)->draw(shader);
+    //}
 
     // Node guide draw
     if (node_guide != NULL) {

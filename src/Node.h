@@ -10,6 +10,7 @@ class Node {
 public:
     Node(glm::vec3 position);
     Node(glm::vec3 position, glm::vec3 new_color);
+    Node(glm::vec3 position, float new_offset, glm::vec3 new_color);
     ~Node(){};
 
     glm::vec3 getNodePosition();
@@ -20,12 +21,12 @@ public:
 
 private:
     const float NODE_RADIUS = 0.6f; //0.5
-    const float NODE_OFFSET = 3.0f;
     const int NODE_STACKS = 20;
     const int NODE_SLICES = 40;
 
     glm::vec3 position;
-    glm::vec3 color = COLOR_ORANGE;
+    float offset = 0.0f;
+    glm::vec3 color = COLOR_BROWN;
 
     std::unique_ptr<basicgraphics::Mesh> meshes[20];
 

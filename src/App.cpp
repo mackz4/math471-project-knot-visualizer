@@ -15,7 +15,7 @@ App::App(int argc, char** argv) : VRApp(argc, argv)
 	_lastTime = 0.0;
 	_curFrameTime = 0.0;
 
-	currTheta = glm::radians(0.0);
+	currTheta = glm::radians(90.0);
 	currPhi = glm::radians(90.0);
 
     eye_world = angleToSpherePoint(currTheta, currPhi);
@@ -35,7 +35,7 @@ App::App(int argc, char** argv) : VRApp(argc, argv)
 
     //Test Knot init
     std::shared_ptr<Knot> knot;
-    knot.reset(new Knot(knot_color_index[knot_count]));
+    knot.reset(new Knot(knot_color_index[knot_count % 3]));
     knots.push_back(knot);
     knot_curr = knots.at(knot_count);
     //Test Knot init end
@@ -82,59 +82,61 @@ void App::onButtonDown(const VRButtonEvent &event) {
 	*/
 	string name = event.getName();
 	if (name == "MouseBtnLeft_Down") {
-        if (knot_count != 3) {
 
-            vec3 node_position_curr = vec3(0.0, -(mousePosY - 512.0) / 20.48, -(mousePosX - 512.0) / 20.48);
-            if (canNodeBePlaced == true) {
-                if (node_position_curr.y >= -25.0 && node_position_curr.y <= 25.0 && node_position_curr.z >= -25.0 && node_position_curr.z <= 25.0) { // within screen range      
-                    if (knot_curr->getNodeCount() == 0) {
-                        std::shared_ptr<Node> node;
-                        node.reset(new Node(node_position_curr, COLOR_ORANGE)); //FIRST NODE
-                        knot_curr->addNode(node);
-                        knot_curr->incNodeCount();
-                        node_total_count++;
+
+        vec3 node_position_curr = vec3((mousePosX - 512.0) / 20.48, -(mousePosY - 512.0) / 20.48, 0.0);
+        if (canNodeBePlaced == true) {
+            if (node_position_curr.x >= -25.0 && node_position_curr.x <= 25.0 && node_position_curr.y >= -25.0 && node_position_curr.y <= 25.0) { // within screen range      
+                //TESTNEW
+                intersection_nodes_permanent.clear();
+                for (size_t i = 0; i < intersection_nodes.size(); i++) {
+                    intersection_nodes.push_back(intersection_nodes.at(i));
+                }
+                //ENDTESTNEW
+                
+                
+                
+                
+                if (knot_curr->getNodeCount() == 0) {
+                    std::shared_ptr<Node> node;
+                    node.reset(new Node(node_position_curr, COLOR_BROWN)); //FIRST NODE
+                    knot_curr->addNode(node);
+                    knot_curr->incNodeCount();
+                    node_total_count++;
+                }
+                else {
+                    float knot_connection_dist = glm::sqrt(glm::pow(node_position_curr.x - knot_curr->getNodes().at(0)->getNodePosition().x, 2) + glm::pow(node_position_curr.y - knot_curr->getNodes().at(0)->getNodePosition().y, 2));
+                    if (knot_connection_dist < KNOT_CONNECTION_DIST_MAX) {
+                        std::shared_ptr<Edge> edge;
+                        edge.reset(new Edge(knot_curr->getNodes().at(knot_curr->getNodeCount() - 1)->getNodePosition(), knot_curr->getNodes().at(0)->getNodePosition(), knot_color_index[knot_count % 3]));
+                        knot_curr->addEdge(edge);
+                        knot_curr->incEdgeCount();
+                        knot_curr->setNodeGuide(NULL);
+                        knot_curr->setEdgeGuide(NULL);
+                        knot_curr->getNodes().at(0)->setColor(COLOR_BROWN);
+
+                        knot_count++;
+                        std::shared_ptr<Knot> knot;
+                        knot.reset(new Knot(knot_color_index[knot_count % 3]));
+                        knots.push_back(knot);
+                        knot_curr = knots.at(knot_count);
+                        canKnotBeConnected = false;
                     }
                     else {
-                        float knot_connection_dist = glm::sqrt(glm::pow(node_position_curr.y - knot_curr->getNodes().at(0)->getNodePosition().y, 2) + glm::pow(node_position_curr.z - knot_curr->getNodes().at(0)->getNodePosition().z, 2));
-                        if (knot_connection_dist < KNOT_CONNECTION_DIST_MAX) {
+                        float edge_guide_length = glm::sqrt(glm::pow(node_position_curr.x - knot_curr->getNodes().at(knot_curr->getNodeCount() - 1)->getNodePosition().x, 2) + glm::pow(node_position_curr.y - knot_curr->getNodes().at(knot_curr->getNodeCount() - 1)->getNodePosition().y, 2));
+                        if (edge_guide_length >= KNOT_SPACING_DIST_MIN) {
+                            knot_curr->getNodeGuide()->setColor(COLOR_BROWN);
+
+                            std::shared_ptr<Node> node;
+                            node.reset(new Node(node_position_curr, COLOR_BROWN));
+                            knot_curr->addNode(node);
+                            knot_curr->incNodeCount();
+                            node_total_count++;
+
                             std::shared_ptr<Edge> edge;
-                            edge.reset(new Edge(knot_curr->getNodes().at(knot_curr->getNodeCount() - 1)->getNodePosition(), knot_curr->getNodes().at(0)->getNodePosition(), knot_color_index[knot_count]));
+                            edge.reset(new Edge(knot_curr->getNodes().at(knot_curr->getNodeCount() - 2)->getNodePosition(), node_position_curr, knot_color_index[knot_count % 3]));
                             knot_curr->addEdge(edge);
                             knot_curr->incEdgeCount();
-                            knot_curr->setNodeGuide(NULL);
-                            knot_curr->setEdgeGuide(NULL);
-                            knot_curr->getNodes().at(0)->setColor(COLOR_ORANGE);
-
-                            knot_count++;
-                            if (knot_count == 3) {
-                                drawFancyKnots(); 
-                                knot_curr->setNodeGuide(NULL);
-                                knot_curr->setEdgeGuide(NULL);
-                            }
-                            else {
-                                std::shared_ptr<Knot> knot;
-                                knot.reset(new Knot(knot_color_index[knot_count]));
-                                knots.push_back(knot);
-                                knot_curr = knots.at(knot_count);
-                                canKnotBeConnected = false;
-                            }
-                        }
-                        else {
-                            float edge_guide_length = glm::sqrt(glm::pow(node_position_curr.y - knot_curr->getNodes().at(knot_curr->getNodeCount() - 1)->getNodePosition().y, 2) + glm::pow(node_position_curr.z - knot_curr->getNodes().at(knot_curr->getNodeCount() - 1)->getNodePosition().z, 2));
-                            if (edge_guide_length >= KNOT_SPACING_DIST_MIN) {
-                                knot_curr->getNodeGuide()->setColor(COLOR_ORANGE);
-
-                                std::shared_ptr<Node> node;
-                                node.reset(new Node(node_position_curr, COLOR_ORANGE));
-                                knot_curr->addNode(node);
-                                knot_curr->incNodeCount();
-                                node_total_count++;
-
-                                std::shared_ptr<Edge> edge;
-                                edge.reset(new Edge(knot_curr->getNodes().at(knot_curr->getNodeCount() - 2)->getNodePosition(), node_position_curr, knot_color_index[knot_count]));
-                                knot_curr->addEdge(edge);
-                                knot_curr->incEdgeCount();
-                            }
                         }
                     }
                 }
@@ -167,7 +169,7 @@ void App::onButtonDown(const VRButtonEvent &event) {
         //is_painting = !is_painting;
     }
     else if (name == "KbdLeftShift_Down" || name == "KbdRightShift_Down") {
-
+        keyShiftDown = true;
     }
     else if (name == "KbdEnter_Down") {
         drawFancyKnots();
@@ -202,21 +204,25 @@ void App::onButtonUp(const VRButtonEvent &event) {
     else if (event.getName() == "MouseBtnRight_Up") {
         mouseRightDown = false;
     }
+    else if (event.getName() == "KbdLeftShift_Up" || event.getName() == "KbdRightShift_Up") {
+        keyShiftDown = false;
+    }
 }
 
 void App::onCursorMove(const VRCursorEvent &event) {
     mousePosX = event.getPos()[0];
     mousePosY = event.getPos()[1];
 
-    node_cursor_position = vec3(0.0, -(mousePosY - 512.0) / 20.48, -(mousePosX - 512.0) / 20.48);
+    node_cursor_position = vec3((mousePosX - 512.0) / 20.48, -(mousePosY - 512.0) / 20.48, 0.0);
 
-    if (node_cursor_position.y >= -25.0 && node_cursor_position.y <= 25.0 && node_cursor_position.z >= -25.0 && node_cursor_position.z <= 25.0) { // within bounds
+    if (node_cursor_position.x >= -25.0 && node_cursor_position.x <= 25.0 && node_cursor_position.y >= -25.0 && node_cursor_position.y <= 25.0) { // within bounds
         std::shared_ptr<Node> node_guide;
-        node_guide.reset(new Node(vec3(node_cursor_position.x + 3.0f, node_cursor_position.y, node_cursor_position.z), COLOR_ORANGE));
+        node_guide.reset(new Node(vec3(node_cursor_position.x, node_cursor_position.y, node_cursor_position.z + 3.0f), COLOR_BROWN));
         knot_curr->setNodeGuide(node_guide);
 
 
         //TEST
+        intersection_nodes.clear();
         if (knot_curr->getEdgeGuide() != NULL) {
             calcEdgeIntersection();
         }
@@ -233,22 +239,22 @@ void App::onCursorMove(const VRCursorEvent &event) {
         // HANDLES KNOT CONNECTION
         float knot_connection_dist = 1000.0f;
         if (knot_curr->getNodeCount() > 2) {
-            knot_connection_dist = glm::sqrt(glm::pow(node_cursor_position.y - knot_curr->getNodes().at(0)->getNodePosition().y, 2) + glm::pow(node_cursor_position.z - knot_curr->getNodes().at(0)->getNodePosition().z, 2));
+            knot_connection_dist = glm::sqrt(glm::pow(node_cursor_position.x - knot_curr->getNodes().at(0)->getNodePosition().x, 2) + glm::pow(node_cursor_position.y - knot_curr->getNodes().at(0)->getNodePosition().y, 2));
         }
         if (knot_connection_dist < KNOT_CONNECTION_DIST_MAX) {
             std::shared_ptr<Edge> edge_guide;
             edge_guide.reset(new Edge(
-                vec3(knot_curr->getNodes().at(knot_curr->getNodeCount() - 1)->getNodePosition().x + 1.5,
+                vec3(knot_curr->getNodes().at(knot_curr->getNodeCount() - 1)->getNodePosition().x,
                     knot_curr->getNodes().at(knot_curr->getNodeCount() - 1)->getNodePosition().y,
-                    knot_curr->getNodes().at(knot_curr->getNodeCount() - 1)->getNodePosition().z),
-                vec3(knot_curr->getNodes().at(0)->getNodePosition().x + 1.5,
+                    knot_curr->getNodes().at(knot_curr->getNodeCount() - 1)->getNodePosition().z + 1.5),
+                vec3(knot_curr->getNodes().at(0)->getNodePosition().x,
                     knot_curr->getNodes().at(0)->getNodePosition().y,
-                    knot_curr->getNodes().at(0)->getNodePosition().z),
+                    knot_curr->getNodes().at(0)->getNodePosition().z + 1.5),
                 COLOR_YELLOW));
             knot_curr->setEdgeGuide(edge_guide);
 
             std::shared_ptr<Node> node_guide;
-            node_guide.reset(new Node(knot_curr->getNodes().at(0)->getNodePosition(), COLOR_ORANGE));
+            node_guide.reset(new Node(knot_curr->getNodes().at(0)->getNodePosition(), COLOR_BROWN));
             knot_curr->setNodeGuide(node_guide);
 
             canKnotBeConnected = true;
@@ -260,7 +266,7 @@ void App::onCursorMove(const VRCursorEvent &event) {
             float edge_dist_nearest = calcEdgeDistNearest(node_cursor_position); // calculate distance of nearest edge to cursor
             if (edge_dist_nearest < KNOT_SPACING_DIST_MIN && knot_curr->getNodeCount() == 0 && node_total_count != 0) {
                 std::shared_ptr<Node> node_guide;
-                node_guide.reset(new Node(vec3(node_cursor_position.x + 3.0f, node_cursor_position.y, node_cursor_position.z), COLOR_RED));
+                node_guide.reset(new Node(vec3(node_cursor_position.x, node_cursor_position.y, node_cursor_position.z + 3.0f), COLOR_RED));
                 knot_curr->setNodeGuide(node_guide);
                 canNodeBePlaced = false;
             }
@@ -271,34 +277,34 @@ void App::onCursorMove(const VRCursorEvent &event) {
 
                 //if (mouseDown == true) {
                 //    std::shared_ptr<Node> node;
-                //    node.reset(new Node(node_cursor_position, COLOR_ORANGE));
+                //    node.reset(new Node(node_cursor_position, COLOR_BROWN));
                 //    knot_curr->addNode(node);
                 //    knot_curr->incNodeCount();
                 //    node_total_count++;
 
                 //    std::shared_ptr<Edge> edge;
-                //    edge.reset(new Edge(knot_curr->getNodes().at(knot_curr->getNodeCount() - 2)->getNodePosition(), node_cursor_position, knot_color_index[knot_count]));
+                //    edge.reset(new Edge(knot_curr->getNodes().at(knot_curr->getNodeCount() - 2)->getNodePosition(), node_cursor_position, knot_color_index[knot_count % 3]));
                 //    knot_curr->addEdge(edge);
                 //    knot_curr->incEdgeCount();
                 //}
                 std::shared_ptr<Edge> edge_guide;
-                edge_guide.reset(new Edge(vec3(knot_curr->getNodes().at(knot_curr->getNodeCount() - 1)->getNodePosition().x + 1.5,
+                edge_guide.reset(new Edge(vec3(knot_curr->getNodes().at(knot_curr->getNodeCount() - 1)->getNodePosition().x,
                     knot_curr->getNodes().at(knot_curr->getNodeCount() - 1)->getNodePosition().y,
-                    knot_curr->getNodes().at(knot_curr->getNodeCount() - 1)->getNodePosition().z),
-                    vec3(node_cursor_position.x + 1.5,
+                    knot_curr->getNodes().at(knot_curr->getNodeCount() - 1)->getNodePosition().z + 1.5),
+                    vec3(node_cursor_position.x,
                         node_cursor_position.y,
-                        node_cursor_position.z),
+                        node_cursor_position.z + 1.5),
                     COLOR_YELLOW));
                 knot_curr->setEdgeGuide(edge_guide);
             }
             else if (edge_dist_nearest < KNOT_SPACING_DIST_MIN && node_total_count > 1) {
                 std::shared_ptr<Edge> edge_guide;
-                edge_guide.reset(new Edge(vec3(knot_curr->getNodes().at(knot_curr->getNodeCount() - 1)->getNodePosition().x + 1.5,
+                edge_guide.reset(new Edge(vec3(knot_curr->getNodes().at(knot_curr->getNodeCount() - 1)->getNodePosition().x,
                     knot_curr->getNodes().at(knot_curr->getNodeCount() - 1)->getNodePosition().y,
-                    knot_curr->getNodes().at(knot_curr->getNodeCount() - 1)->getNodePosition().z),
-                    vec3(node_cursor_position.x + 1.5,
+                    knot_curr->getNodes().at(knot_curr->getNodeCount() - 1)->getNodePosition().z + 1.5),
+                    vec3(node_cursor_position.x,
                         node_cursor_position.y,
-                        node_cursor_position.z),
+                        node_cursor_position.z + 1.5),
                     COLOR_RED));
                 knot_curr->setEdgeGuide(edge_guide);
                 canNodeBePlaced = false;
@@ -309,12 +315,12 @@ void App::onCursorMove(const VRCursorEvent &event) {
                 float edge_dist_nearest = glm::sqrt(glm::pow(dist.x, 2) + glm::pow(dist.y, 2) + glm::pow(dist.z, 2));; // calculate distance of vertex to cursor
                 if (edge_dist_nearest < KNOT_SPACING_DIST_MIN) { // cursor node can be placed in valid spot
                     std::shared_ptr<Edge> edge_guide;
-                    edge_guide.reset(new Edge(vec3(knot_curr->getNodes().at(knot_curr->getNodeCount() - 1)->getNodePosition().x + 1.5,
+                    edge_guide.reset(new Edge(vec3(knot_curr->getNodes().at(knot_curr->getNodeCount() - 1)->getNodePosition().x,
                         knot_curr->getNodes().at(knot_curr->getNodeCount() - 1)->getNodePosition().y,
-                        knot_curr->getNodes().at(knot_curr->getNodeCount() - 1)->getNodePosition().z),
-                        vec3(node_cursor_position.x + 1.5,
+                        knot_curr->getNodes().at(knot_curr->getNodeCount() - 1)->getNodePosition().z + 1.5),
+                        vec3(node_cursor_position.x,
                             node_cursor_position.y,
-                            node_cursor_position.z),
+                            node_cursor_position.z + 1.5),
                         COLOR_RED));
                     knot_curr->setEdgeGuide(edge_guide);
 
@@ -322,12 +328,12 @@ void App::onCursorMove(const VRCursorEvent &event) {
                 }
                 else {
                     std::shared_ptr<Edge> edge_guide;
-                    edge_guide.reset(new Edge(vec3(knot_curr->getNodes().at(knot_curr->getNodeCount() - 1)->getNodePosition().x + 1.5,
+                    edge_guide.reset(new Edge(vec3(knot_curr->getNodes().at(knot_curr->getNodeCount() - 1)->getNodePosition().x,
                         knot_curr->getNodes().at(knot_curr->getNodeCount() - 1)->getNodePosition().y,
-                        knot_curr->getNodes().at(knot_curr->getNodeCount() - 1)->getNodePosition().z),
-                        vec3(node_cursor_position.x + 1.5,
+                        knot_curr->getNodes().at(knot_curr->getNodeCount() - 1)->getNodePosition().z + 1.5),
+                        vec3(node_cursor_position.x,
                             node_cursor_position.y,
-                            node_cursor_position.z),
+                            node_cursor_position.z + 1.5),
                         COLOR_YELLOW));
                     knot_curr->setEdgeGuide(edge_guide);
 
@@ -610,6 +616,21 @@ if (knot_guide_mesh != NULL) {
         knots.at(i)->draw(_environment_shader);
     } 
 
+    // Intersection nodes draw
+    for (size_t i = 0; i < intersection_nodes.size(); i++) {
+        if (keyShiftDown == true) {
+            intersection_nodes.at(i)->setColor(COLOR_CYAN);
+        }
+        else {
+            intersection_nodes.at(i)->setColor(COLOR_LIGHT_BLUE);
+        }
+        intersection_nodes.at(i)->draw(_environment_shader);
+    }
+    // Intersection nodes permanent draw
+    for (size_t i = 0; i < intersection_nodes_permanent.size(); i++) {
+        intersection_nodes.at(i)->draw(_environment_shader);
+    }
+
     // Set shaders on or off
     if (isShadersEnabled == true) {
         for (size_t i = 0; i < knots.size(); i++) {
@@ -639,10 +660,10 @@ if (knot_guide_mesh != NULL) {
         drawText(world_pos_text_y, 0, 48, windowHeight, windowWidth);
         std::string world_pos_text_z = "z:";
         drawText(world_pos_text_z, 0, 64, windowHeight, windowWidth);
-        std::string knot_count_text = "knot_count:";
-        drawText(knot_count_text, 0, 80, windowHeight, windowWidth);
         std::string node_total_count_text = "node_count:";
-        drawText(node_total_count_text, 0, 96, windowHeight, windowWidth);
+        drawText(node_total_count_text, 0, 80, windowHeight, windowWidth);
+        std::string knot_count_text = "knot_count:";
+        drawText(knot_count_text, 0, 96, windowHeight, windowWidth);
 
         fonsSetColor(fs, glfonsRGBA(255, 255, 0, 255));
         fonsSetAlign(fs, FONS_ALIGN_RIGHT | FONS_ALIGN_TOP);
@@ -675,10 +696,10 @@ if (knot_guide_mesh != NULL) {
         drawText(world_pos_text_y_2, 0, 48, windowHeight, windowWidth);
         drawText(world_pos_text_z_2, 0, 64, windowHeight, windowWidth);
 
-        std::string knot_count_text_2 = "            " + std::to_string(knot_count);
-        drawText(knot_count_text_2, 0, 80, windowHeight, windowWidth);
         std::string node_total_count_text_2 = "            " + std::to_string(node_total_count);
-        drawText(node_total_count_text_2, 0, 96, windowHeight, windowWidth);
+        drawText(node_total_count_text_2, 0, 80, windowHeight, windowWidth);
+        std::string knot_count_text_2 = "            " + std::to_string(knot_count);
+        drawText(knot_count_text_2, 0, 96, windowHeight, windowWidth);
     }
 }
 
@@ -897,7 +918,7 @@ void App::initializeText() {
         assert(false);//Could not create stash
     }
 
-    fontNormal = fonsAddFont(fs, "sans", "templeos_font.ttf");
+    fontNormal = fonsAddFont(fs, "sans", "customfont.ttf");
     if (fontNormal == FONS_INVALID) {
         assert(false);// Could not add font normal.
     }
@@ -959,57 +980,52 @@ float App::calcEdgeDistNearest(vec3 node_cursor_position) {
 
 void App::calcEdgeIntersection() { 
     // Source: https://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segments-intersect
+    float p0_x = knot_curr->getEdgeGuide()->getPositionPrev().x;
     float p0_y = knot_curr->getEdgeGuide()->getPositionPrev().y;
-    float p0_z= knot_curr->getEdgeGuide()->getPositionPrev().z;
+    float p1_x = knot_curr->getEdgeGuide()->getPositionCurr().x;
     float p1_y = knot_curr->getEdgeGuide()->getPositionCurr().y;
-    float p1_z = knot_curr->getEdgeGuide()->getPositionCurr().z;
-
-
+    //std::cout << "0X: " << p0_x << " | 0Y: " << p0_y << " | 1X: " << p1_x << " | 1Y: " << p1_y << std::endl;
     
     for (int i = 0; i < knots.size(); i++) {
-        for (int j = 0; j < knots.at(i)->getEdgeCount(); j++) {
+        for (int j = 0; j < knots.at(i)->getEdges().size(); j++) {
+            float p2_x = knots.at(i)->getEdges().at(j)->getPositionPrev().x;
             float p2_y = knots.at(i)->getEdges().at(j)->getPositionPrev().y;
-            float p2_z = knots.at(i)->getEdges().at(j)->getPositionPrev().z;
+            float p3_x = knots.at(i)->getEdges().at(j)->getPositionCurr().x;
             float p3_y = knots.at(i)->getEdges().at(j)->getPositionCurr().y;
-            float p3_z = knots.at(i)->getEdges().at(j)->getPositionCurr().z;
 
-            float s1_y, s1_z, s2_y, s2_z;
+            float s1_x, s1_y, s2_x, s2_y;
+            s1_x = p1_x - p0_x;
             s1_y = p1_y - p0_y;
-            s1_z = p1_z - p0_z;
+            s2_x = p3_x - p2_x;
             s2_y = p3_y - p2_y;
-            s2_z = p3_z = p2_z;
 
             float s, t;
-            s = (-s1_z * (p0_y - p2_y) + s1_y * (p0_z - p2_z)) / (-s2_y * s1_z + s1_y * s2_z);
-            t = (s2_y * (p0_z - p2_z) - s2_z * (p0_y - p2_y)) / (-s2_y * s1_z + s1_y * s2_z);
+            s = (-s1_y * (p0_x - p2_x) + s1_x * (p0_y - p2_y)) / (-s2_x * s1_y + s1_x * s2_y);
+            t = (s2_x * (p0_y - p2_y) - s2_y * (p0_x - p2_x)) / (-s2_x * s1_y + s1_x * s2_y);
 
             if (s >= 0 && s <= 1 && t >= 0 && t <= 1)
             {
-                std::cout << "COLLISION DETECTED!" << std::endl;
+                float i_x = p0_x + (t * s1_x);
                 float i_y = p0_y + (t * s1_y);
-                float i_z = p0_z + (t * s1_z);
 
-
-                std::shared_ptr<Node> node;
-                node.reset(new Node(vec3(0.0f, i_y, i_z), COLOR_CYAN)); //FIRST NODE
-                knot_curr->addIntersectionNode(node);
-                // Collision detected
-                //if (i_x != NULL)
-                //    *i_x = p0_x + (t * s1_x);
-                //if (i_y != NULL)
-                //    *i_y = p0_y + (t * s1_y);
-                //return 1;
+                if (i_x != p0_x && i_y != p0_y) {
+                    std::shared_ptr<Node> node;
+                    if (keyShiftDown) {
+                        std::cout << "TRUE" << std::endl;
+                        node.reset(new Node(vec3(i_x, i_y, 0.0f), 4.5f, COLOR_CYAN)); //FIRST NODE
+                    }
+                    else {
+                        std::cout << "FALSE" << std::endl;
+                        node.reset(new Node(vec3(i_x, i_y, 0.0f), 4.5f, COLOR_LIGHT_BLUE)); //FIRST NODE}
+                    }
+                    intersection_nodes.push_back(node);
+                }
             }
-
-            //return 0; // No collision
-
         }
     }
-    
-
 }
 
 
 void App::drawFancyKnots() {
-    std::cout << "FANCY" << std::endl;
+
 }

@@ -128,6 +128,9 @@ private:
 
     std::vector<glm::vec3> knot_guide_vertices;
     std::vector <glm::vec3> last_knot_vertices;
+
+    std::vector<std::shared_ptr<Node>> intersection_nodes;
+    std::vector<std::shared_ptr<Node>> intersection_nodes_permanent;
     //EndKnotMeshVars
 
 
@@ -147,6 +150,7 @@ private:
     bool isDebugEnabled = true;
     bool canNodeBePlaced = true;
     bool canKnotBeConnected = false;
+    bool keyShiftDown = false;
 
     float calcEdgeDistNearest(vec3 node_cursor_position);
     void calcEdgeIntersection();
