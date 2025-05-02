@@ -138,7 +138,7 @@ void App::onButtonDown(const VRButtonEvent &event) {
 
                 if (knot_curr->getNodeCount() == 0) {
                     std::shared_ptr<Node> node;
-                    node.reset(new Node(node_position_curr, KNOT_SPACING_DIST_MIN, knot_color_index_2[knot_count % 3])); //FIRST NODE
+                    node.reset(new Node(node_position_curr, KNOT_SPACING_DIST_MIN + 5.0f, knot_color_index_2[knot_count % 3])); //FIRST NODE
                     knot_curr->addNode(node);
                     knot_curr->incNodeCount();
                     node_total_count++;
@@ -182,6 +182,7 @@ void App::onButtonDown(const VRButtonEvent &event) {
     /*                            knot_curr->getNodes().at(knot_curr->getNodeCount() - 3)->setOffset(KNOT_SPACING_DIST_MIN);*/
                                 knot_curr->getNodes().at(knot_curr->getNodeCount() - 2 - new_knot_count)->setOffset(KNOT_SPACING_DIST_MIN);
                             }
+                            knot_curr->setEdgeGuide(NULL); // COMMENT OUT IF STUFF BREAKS
 
                             std::shared_ptr<Edge> edge;
                             edge.reset(new Edge(knot_curr->getNodes().at(knot_curr->getNodeCount() - 2)->getNodePosition(), node_position_curr, knot_color_index[knot_count % 3]));
@@ -322,7 +323,7 @@ void App::onCursorMove(const VRCursorEvent &event) {
                     knot_curr->getNodes().at(0)->getNodePosition().y,
                     knot_curr->getNodes().at(0)->getNodePosition().z), 
                 KNOT_SPACING_DIST_MIN + 4.0f,
-                knot_color_index[knot_count % 3]));
+                COLOR_DARK_GRAY/*knot_color_index[knot_count % 3]*/));
             knot_curr->setEdgeGuide(edge_guide);
 
             std::shared_ptr<Node> node_guide;
@@ -366,7 +367,7 @@ void App::onCursorMove(const VRCursorEvent &event) {
                     vec3(node_cursor_position.x,
                         node_cursor_position.y,
                         node_cursor_position.z),
-                    KNOT_SPACING_DIST_MIN + 4.0f, knot_color_index[knot_count % 3]));
+                    KNOT_SPACING_DIST_MIN + 4.0f, COLOR_DARK_GRAY/*knot_color_index[knot_count % 3]*/));
                 knot_curr->setEdgeGuide(edge_guide);
             }
             else if (edge_dist_nearest < KNOT_SPACING_DIST_MIN && node_total_count > 1) {
@@ -409,7 +410,7 @@ void App::onCursorMove(const VRCursorEvent &event) {
                             node_cursor_position.y,
                             node_cursor_position.z),
                         KNOT_SPACING_DIST_MIN + 4.0f,
-                        knot_color_index[knot_count % 3]));
+                        COLOR_DARK_GRAY/*knot_color_index[knot_count % 3]*/));
                     knot_curr->setEdgeGuide(edge_guide);
 
 

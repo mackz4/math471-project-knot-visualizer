@@ -91,6 +91,21 @@ void Edge::setupStitchedGeometry(vec3 vert0, vec3 vert1, vec3 vert2, vec3 vert3)
     angle = (180.0 - glm::degrees(glm::acos(glm::dot(a, b) / (glm::length(a) * glm::length(b))))) / 2.0;
     vert_displacement_y = EDGE_RADIUS * glm::tan(glm::radians(angle));
 
+
+
+    // TEMP
+    float x1 = vert0.x - vert1.x;
+    float y1 = vert0.y - vert1.y;
+    float x2 = vert2.x - vert1.x;
+    float y2 = vert2.y - vert1.y;
+
+    float dot = x1 * x2 + y1 * y2;
+    float det = x1 * y2 - y1 * x2;
+    angle = (180.0 - glm::degrees(glm::atan(det, dot))) / 2.0f;
+    vert_displacement_y = EDGE_RADIUS * glm::tan(glm::radians(angle));
+    std::cout << "T-angle: " << angle << std::endl;
+    // ENDTEMP
+
     float hyp_len = glm::sqrt(EDGE_RADIUS * EDGE_RADIUS + vert_displacement_y * vert_displacement_y);
 
     ////
@@ -101,6 +116,20 @@ void Edge::setupStitchedGeometry(vec3 vert0, vec3 vert1, vec3 vert2, vec3 vert3)
     vec3 b_2 = glm::normalize(vert1 - vert2);
     angle_2 = (180.0 - glm::degrees(glm::acos(glm::dot(a_2, b_2) / (glm::length(a_2) * glm::length(b_2))))) / 2.0;
     vert_displacement_y_2 = EDGE_RADIUS * glm::tan(glm::radians(angle_2));
+
+
+    // TEMP
+    float x1_2 = vert3.x - vert2.x;
+    float y1_2 = vert3.y - vert2.y;
+    float x2_2 = vert1.x - vert2.x;
+    float y2_2 = vert1.y - vert2.y;
+
+    float dot_2 = x1_2 * x2_2 + y1_2 * y2_2;
+    float det_2 = x1_2 * y2_2 - y1_2 * x2_2;
+    angle_2 = (180.0 - glm::degrees(glm::atan(det_2, dot_2))) / 2.0f;
+    vert_displacement_y_2 = EDGE_RADIUS * glm::tan(glm::radians(angle_2));
+    //std::cout << "T-angle: " << angle << std::endl;
+    // ENDTEMP
 
     float hyp_len_2 = glm::sqrt(EDGE_RADIUS * EDGE_RADIUS + vert_displacement_y_2 * vert_displacement_y_2);
 
@@ -130,7 +159,7 @@ void Edge::setupStitchedGeometry(vec3 vert0, vec3 vert1, vec3 vert2, vec3 vert3)
         cpuVertexArray.push_back(vert);
         cpuIndexArray.push_back(vert_count++);
 
-        vert.position = vec3(x_pos, edge_length / 2.0 + vert_height_y_2, z_pos);
+        vert.position = vec3(x_pos, edge_length / 2.0 - vert_height_y_2, z_pos);
         vert.normal = vec3(glm::sin(starting_angle), 0, glm::cos(starting_angle));
         vert.texCoord0 = glm::vec2(1.0 - float(i) / float(N_CAN_SIDES), 0.0);
         cpuVertexArray.push_back(vert);
