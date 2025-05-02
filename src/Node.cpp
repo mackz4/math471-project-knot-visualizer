@@ -86,6 +86,11 @@ vec3 Node::getColor() {
     return color;
 }
 
+void Node::setOffset(float new_offset) {
+    offset = new_offset;
+    setupGeometry();
+}
+
 void Node::draw(GLSLProgram &shader) {
     shader.setUniform("model_mat", mat4(1.0f));
     shader.setUniform("materialColor", color);

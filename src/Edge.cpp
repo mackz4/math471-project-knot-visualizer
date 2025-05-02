@@ -22,6 +22,16 @@ Edge::Edge(glm::vec3 node_position_prev, glm::vec3 node_position_curr, glm::vec3
     setupGeometry();
 }
 
+Edge::Edge(glm::vec3 node_position_prev, glm::vec3 node_position_curr, float new_offset, glm::vec3 new_color) {
+
+    position_prev = node_position_prev;
+    position_curr = node_position_curr;
+    offset = new_offset;
+    color = new_color;
+
+    setupGeometry();
+}
+
 Edge::Edge(glm::vec3 vert0, glm::vec3 vert1, glm::vec3 vert2, glm::vec3 vert3, glm::vec3 new_color) {
 
     position_prev = vert1;
@@ -47,7 +57,7 @@ void Edge::setupGeometry() {
     int vert_count = 0;
     for (int i = 0; i <= N_EDGE_SIDES; i++) {
         x_pos = EDGE_RADIUS * glm::sin(starting_angle);
-        z_pos = EDGE_RADIUS * glm::cos(starting_angle);
+        z_pos = offset + EDGE_RADIUS * glm::cos(starting_angle);
 
         vert.position = vec3(x_pos, -edge_length / 2.0, z_pos);
         vert.normal = vec3(glm::sin(starting_angle), 0, glm::cos(starting_angle));

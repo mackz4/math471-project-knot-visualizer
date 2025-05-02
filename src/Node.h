@@ -17,11 +17,12 @@ public:
     void setupGeometry();
     void setColor(vec3 new_color);
     vec3 getColor();
+    void setOffset(float new_offset);
     void draw(basicgraphics::GLSLProgram &shader);
 
 
 private:
-    const float NODE_RADIUS = 1.5f; //0.6
+    const float NODE_RADIUS = 0.6f; //0.6
     const int NODE_STACKS = 20;
     const int NODE_SLICES = 40;
 

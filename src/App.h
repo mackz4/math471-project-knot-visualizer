@@ -135,7 +135,7 @@ private:
 
 
     // 4/25, 4/26 - 5/1
-    const float KNOT_SPACING_DIST_MIN = 8.0f; //2.0
+    const float KNOT_SPACING_DIST_MIN = 2.0f; //2.0
     const float KNOT_CONNECTION_DIST_MAX = 1.0f;
 
     std::vector<std::shared_ptr<Knot>> knots;
