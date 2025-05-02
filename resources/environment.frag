@@ -38,7 +38,7 @@ void main() {
     // TODO: Calculate ambient, diffuse, and specular lighting for this pixel based on its position, normal, etc.
     vec3 n = normalize(interpSurfNormal);
     //vec3 u = -light_direction;
-    vec3 u = vec3(0.0, 1.0, 0.0);
+    vec3 u = normalize(vec3(0.0, 0.0, 1.0));
     vec3 v = normalize(eye_world - (interpSurfPosition.xyz)); 
     vec3 h = normalize(u + v);
 

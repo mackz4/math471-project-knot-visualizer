@@ -50,7 +50,7 @@ void Node::setupGeometry() {
         for (int j = 0; j <= NODE_SLICES; j++) {
             xPos = position.x + NODE_RADIUS * cos(latitude) * cos(longitude);
             yPos = position.y + NODE_RADIUS * sin(latitude);
-            zPos = (3.0f + offset) + position.z + NODE_RADIUS * cos(latitude) * sin(longitude);
+            zPos = offset + position.z + NODE_RADIUS * cos(latitude) * sin(longitude);
             vert.position = vec3(xPos, yPos, zPos);
             vert.normal = vec3(cos(latitude) * cos(longitude), sin(latitude), cos(latitude) * sin(longitude));
             cpuVertexArray.push_back(vert);
@@ -58,7 +58,7 @@ void Node::setupGeometry() {
 
             xPos = position.x + NODE_RADIUS * cos(latitude - (glm::pi<float>() / NODE_STACKS)) * cos(longitude);
             yPos = position.y + NODE_RADIUS * sin(latitude - (glm::pi<float>() / NODE_STACKS));
-            zPos = (3.0f + offset) + position.z + NODE_RADIUS * cos(latitude - (glm::pi<float>() / NODE_STACKS)) * sin(longitude);
+            zPos = offset + position.z + NODE_RADIUS * cos(latitude - (glm::pi<float>() / NODE_STACKS)) * sin(longitude);
 
             vert.position = vec3(xPos, yPos, zPos);
             vert.normal = vec3(cos(latitude - (glm::pi<float>() / NODE_STACKS)) * cos(longitude), sin(latitude - (glm::pi<float>() / NODE_STACKS)), cos(latitude - (glm::pi<float>() / NODE_STACKS)) * sin(longitude));
@@ -80,6 +80,10 @@ void Node::setupGeometry() {
 
 void Node::setColor(vec3 new_color) {
     color = new_color;
+}
+
+vec3 Node::getColor() {
+    return color;
 }
 
 void Node::draw(GLSLProgram &shader) {

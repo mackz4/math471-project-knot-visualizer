@@ -17,6 +17,10 @@ void Knot::addEdge(std::shared_ptr<Edge> edge) {
     edges.push_back(edge);
 }
 
+void Knot::addStitchedEdge(std::shared_ptr<Edge> stitched_edge) {
+    stitched_edges.push_back(stitched_edge);
+}
+
 void Knot::setNodeGuide(std::shared_ptr<Node> new_node_guide) {
     node_guide = new_node_guide;
 }
@@ -49,6 +53,10 @@ std::vector<std::shared_ptr<Edge>> Knot::getEdges() {
     return edges;
 }
 
+std::vector<std::shared_ptr<Edge>> Knot::getStitchedEdges() {
+    return stitched_edges;
+}
+
 std::shared_ptr<Node> Knot::getNodeGuide() {
     return node_guide;
 }
@@ -75,11 +83,6 @@ void Knot::draw(GLSLProgram& shader) {
         edges.at(i)->draw(shader);
     }
 
-    // Intersection nodes draw
-    //for (size_t i = 0; i < intersection_nodes.size(); i++) {
-    //    intersection_nodes.at(i)->draw(shader);
-    //}
-
     // Node guide draw
     if (node_guide != NULL) {
         node_guide->draw(shader);
@@ -88,5 +91,15 @@ void Knot::draw(GLSLProgram& shader) {
     // Edge guide draw
     if (edge_guide != NULL) {
         edge_guide->draw(shader);
+    }
+}
+
+void Knot::drawStitched(basicgraphics::GLSLProgram& shader) {
+    shader.setUniform("light_direction", glm::vec3(0.0f, -1.0f, 0.0f));
+    shader.setUniform("component_mix", component_mix);
+
+    // Stitched edges draw
+    for (size_t i = 0; i < stitched_edges.size(); i++) {
+        stitched_edges.at(i)->draw(shader);
     }
 }
