@@ -46,9 +46,11 @@ void Edge::setupGeometry() {
     std::vector<int> cpuIndexArray;
     std::vector<std::shared_ptr<Texture>> textures;
 
-    float edge_length = glm::sqrt(glm::pow(position_prev.x - position_curr.x, 2) + glm::pow(position_prev.y - position_curr.y, 2));
+    float edge_length = length(position_prev - position_curr);
+    //float edge_length = glm::sqrt(glm::pow(position_prev.x - position_curr.x, 2) + glm::pow(position_prev.y - position_curr.y, 2));
 
     float starting_angle = -glm::pi<float>() / 2.0;
+    starting_angle = glm::pi<float>() / 2.0f;
 
     float x_pos;
     float z_pos;
@@ -191,34 +193,28 @@ void Edge::setColor(vec3 new_color) {
 }
 
 void Edge::draw(GLSLProgram& shader) {
-    vec3 new_vec = normalize(vec3(position_curr - position_prev));
+// https://gamedev.stackexchange.com/questions/118960/convert-a-direction-vector-normalized-to-rotation
+    vec3 dir = normalize(vec3(position_curr - position_prev));
 
     vec3 point_middle = (position_curr + position_prev) / 2.0f;
 
-    float rotation;
-    if (new_vec.x <= 0) {
-        rotation = glm::atan(new_vec.y / new_vec.x) + (glm::pi<float>() / 2.0);
-    }
-    else {
-        rotation = glm::pi<float>() + glm::atan(new_vec.y / new_vec.x) + (glm::pi<float>() / 2.0);
-    }
-
-    float rotation2;
-    if (new_vec.z <= 0) {
-        rotation2 = glm::atan(new_vec.y / new_vec.z) + (glm::pi<float>() / 2.0);
-    }
-    else {
-        rotation2 = glm::pi<float>() + glm::atan(new_vec.y / new_vec.z) + (glm::pi<float>() / 2.0);
-    }
-
-
     glm::mat4 mat_identity = mat4(1.0);
-    glm::mat4 mat_rotZ = glm::rotate(mat_identity, rotation, vec3(0, 0, 1));
-    glm::mat4 mat_rotX = glm::rotate(mat_identity, rotation2, vec3(1, 0, 0));
     glm::mat4 mat_from_origin = glm::translate(mat_identity, point_middle);
 
-    //shader.setUniform("model_mat", mat_from_origin * mat_rotZ * mat_rotX);
-    shader.setUniform("model_mat", mat_from_origin * mat_rotZ);
+    float angle = std::atan2(-dir.z, dir.x);
+
+    // Make the rotation matrix around the vertical (z) axis, adjusts the 'yaw'
+    glm::mat4 glmrotXY = glm::rotate(mat4(1.0), angle, vec3(0.0, 1.0, 0.0));
+
+    // Find the angle with the xy with plane (0, 0, 1); the - there is because we want to 
+    // 'compensate' for that angle (a 'counter-angle')
+    float angleZ = -std::asin(dir.y);
+
+    // Make the matrix for that, assuming that Y is your 'side' vector; makes the model 'pitch'
+    glm::mat4 glmrotZ = glm::rotate(mat4(1.0), angleZ + (glm::pi<float>() / 2.0f), vec3(0.0, 0.0, -1.0));
+
+    shader.setUniform("model_mat", glm::lookAt(vec3(0.0, 0.0, 0.0), dir, vec3(0.0, 1.0, 0.0)));
+    shader.setUniform("model_mat", mat_from_origin * glmrotXY * glmrotZ);
     shader.setUniform("materialColor", color);
 
     mesh->draw(shader);

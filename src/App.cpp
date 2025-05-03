@@ -108,7 +108,12 @@ void App::onButtonDown(const VRButtonEvent &event) {
 
                     vec3 intersection_node_position = intersection_nodes.at(k)->getNodePosition();
                     std::shared_ptr<Node> intersection_node;
-                    intersection_node.reset(new Node(vec3(intersection_node_position.x, intersection_node_position.y, intersection_node_position.z), KNOT_SPACING_DIST_MIN + 3.0f, intersection_nodes.at(k)->getColor())); //FIRST NODE
+                    if (keyShiftDown == true) {
+                        intersection_node.reset(new Node(vec3(intersection_node_position.x, intersection_node_position.y, intersection_node_position.z - KNOT_SPACING_DIST_MIN), KNOT_SPACING_DIST_MIN + 3.0f, intersection_nodes.at(k)->getColor())); //FIRST NODE
+                    }
+                    else {
+                        intersection_node.reset(new Node(vec3(intersection_node_position.x, intersection_node_position.y, intersection_node_position.z + KNOT_SPACING_DIST_MIN), KNOT_SPACING_DIST_MIN + 3.0f, intersection_nodes.at(k)->getColor())); //FIRST NODE
+                    }
                     knot_curr->addNode(intersection_node);
                     knot_curr->incNodeCount();
                     node_total_count++;
@@ -138,7 +143,7 @@ void App::onButtonDown(const VRButtonEvent &event) {
 
                 if (knot_curr->getNodeCount() == 0) {
                     std::shared_ptr<Node> node;
-                    node.reset(new Node(node_position_curr, KNOT_SPACING_DIST_MIN + 5.0f, knot_color_index_2[knot_count % 3])); //FIRST NODE
+                    node.reset(new Node(node_position_curr, KNOT_SPACING_DIST_MIN + 5.0f, COLOR_WHITE/*knot_color_index_2[knot_count % 3]*/)); //FIRST NODE
                     knot_curr->addNode(node);
                     knot_curr->incNodeCount();
                     node_total_count++;
@@ -289,7 +294,7 @@ void App::onCursorMove(const VRCursorEvent &event) {
 
     if (node_cursor_position.x >= -25.0 && node_cursor_position.x <= 25.0 && node_cursor_position.y >= -25.0 && node_cursor_position.y <= 25.0) { // within bounds
         std::shared_ptr<Node> node_guide;
-        node_guide.reset(new Node(vec3(node_cursor_position.x, node_cursor_position.y, node_cursor_position.z), KNOT_SPACING_DIST_MIN + 6.0f, knot_color_index_2[knot_count % 3]));
+        node_guide.reset(new Node(vec3(node_cursor_position.x, node_cursor_position.y, node_cursor_position.z), KNOT_SPACING_DIST_MIN + 6.0f, COLOR_WHITE/*knot_color_index_2[knot_count % 3]*/));
         knot_curr->setNodeGuide(node_guide);
 
 
@@ -323,7 +328,7 @@ void App::onCursorMove(const VRCursorEvent &event) {
                     knot_curr->getNodes().at(0)->getNodePosition().y,
                     knot_curr->getNodes().at(0)->getNodePosition().z), 
                 KNOT_SPACING_DIST_MIN + 4.0f,
-                COLOR_DARK_GRAY/*knot_color_index[knot_count % 3]*/));
+                COLOR_WHITE/*knot_color_index[knot_count % 3]*/));
             knot_curr->setEdgeGuide(edge_guide);
 
             std::shared_ptr<Node> node_guide;
@@ -424,7 +429,7 @@ void App::onCursorMove(const VRCursorEvent &event) {
     }
     
     if (mouseRightDown) {
-        if (visualizer_mode == 0) { // fix to 1
+        if (visualizer_mode == 0 || visualizer_mode == 1) {
             vec2 dxy = vec2(event.getPos()[0], event.getPos()[1]) - lastMousePos;
 
             float changeTheta = glm::atan(dxy.x * _CAMERA_SENSITIVITY, _CAMERA_RADIUS);
