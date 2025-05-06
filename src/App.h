@@ -135,7 +135,7 @@ private:
 
 
     // // // // // //
-    const float KNOT_SPACING_DIST_MIN = 4.0f; //2.0
+    const float KNOT_SPACING_DIST_MIN = 2.0f; //2.0
     const float KNOT_CONNECTION_DIST_MAX = 1.0f;
 
     std::vector<std::shared_ptr<Knot>> knots;
@@ -146,6 +146,7 @@ private:
     int knot_count = 0;
     int node_count_total = 0;
     int edge_count_total = 0;
+    int crossing_count_total = 0;
     int visualizer_mode = 0;
     bool isShadersEnabled = true;
     bool isDebugEnabled = true;
@@ -156,6 +157,7 @@ private:
     float calcEdgeDistNearest(vec3 node_cursor_position);
     void calcEdgeIntersection();
     void drawFancyKnots();
+    void calculatePColorability();
 };
 
 

@@ -82,8 +82,16 @@ void Node::setColor(vec3 new_color) {
     color = new_color;
 }
 
+void Node::setOverlappingEdge(int new_overlapping_edge) {
+    overlapping_edge = new_overlapping_edge;
+}
+
 vec3 Node::getColor() {
     return color;
+}
+
+int Node::getOverlappingEdge() {
+    return overlapping_edge;
 }
 
 void Node::setOffset(float new_offset) {

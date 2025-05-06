@@ -12,9 +12,11 @@ public:
     ~Knot() {};
 
     void incNodeCount();
-    int getNodeCount();
     void incEdgeCount();
+    void incCrossingCount();
+    int getNodeCount();
     int getEdgeCount();
+    int getCrossingCount();
     void addNode(std::shared_ptr<Node> node);
     void addEdge(std::shared_ptr<Edge> edge);
     void addStitchedEdge(std::shared_ptr<Edge> stitched_edge);
@@ -28,6 +30,10 @@ public:
     std::shared_ptr<Edge> getEdgeGuide();
     void draw(basicgraphics::GLSLProgram& shader);
     void drawStitched(basicgraphics::GLSLProgram& shader);
+    bool isPColorable(int p);
+    void eraseEdge(std::shared_ptr<Edge> edge_to_erase);
+    void insertNode(int index, std::shared_ptr<Node> node_crossed);
+    void insertEdge(int index, std::shared_ptr<Edge> edge_crossed_1, std::shared_ptr<Edge> edge_crossed_2);
 
 private:
     std::vector<std::shared_ptr<Node>> nodes;
@@ -41,6 +47,8 @@ private:
 
     int node_count = 0;
     int edge_count = 0;
+    int crossing_count = 0;
 
+    std::vector<std::vector<int>> p_colorability_matrix = {{2, 2}, {3, 4}};
 };
 #endif

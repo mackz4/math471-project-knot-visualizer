@@ -17,18 +17,21 @@ public:
     void setupGeometry();
     void setupStitchedGeometry(vec3 vert0, vec3 vert1, vec3 vert2, vec3 vert3);
     void setColor(vec3 new_color);
+    void setArcLabel(int new_arc_label);
     vec3 getPositionPrev();
     vec3 getPositionCurr();
+    int getArcLabel();
     void draw(basicgraphics::GLSLProgram& shader);
 
 private:
-    const float EDGE_RADIUS = 1.2f; //0.6
+    const float EDGE_RADIUS = 0.6f; //0.6
     const int N_EDGE_SIDES = 40;
 
     glm::vec3 position_prev;
     glm::vec3 position_curr;
     float offset = 0.0f;
     glm::vec3 color = COLOR_WHITE;
+    int arc_label = -1;
 
     std::unique_ptr<basicgraphics::Mesh> mesh;
 

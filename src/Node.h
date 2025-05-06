@@ -17,18 +17,21 @@ public:
     void setupGeometry();
     void setColor(vec3 new_color);
     vec3 getColor();
+    int getOverlappingEdge();
     void setOffset(float new_offset);
+    void setOverlappingEdge(int new_overlapping_edge);
     void draw(basicgraphics::GLSLProgram &shader);
 
 
 private:
-    const float NODE_RADIUS = 1.2f; //0.6
+    const float NODE_RADIUS = 0.6f; //0.6
     const int NODE_STACKS = 20;
     const int NODE_SLICES = 40;
 
     glm::vec3 position;
     float offset = 0.0f;
     glm::vec3 color = COLOR_DARK_YELLOW;
+    int overlapping_edge = NULL;
 
     std::unique_ptr<basicgraphics::Mesh> meshes[20];
 

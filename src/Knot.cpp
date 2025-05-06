@@ -33,16 +33,24 @@ void Knot::incNodeCount() {
     node_count++;
 }
 
-int Knot::getNodeCount() {
-    return node_count;
-}
-
 void Knot::incEdgeCount() {
     edge_count++;
 }
 
+void Knot::incCrossingCount() {
+    crossing_count++;
+}
+
+int Knot::getNodeCount() {
+    return node_count;
+}
+
 int Knot::getEdgeCount() {
     return edge_count;
+}
+
+int Knot::getCrossingCount() {
+    return crossing_count;
 }
 
 std::vector<std::shared_ptr<Node>> Knot::getNodes() {
@@ -65,6 +73,18 @@ std::shared_ptr<Edge> Knot::getEdgeGuide() {
     return edge_guide;
 }
 
+void Knot::eraseEdge(std::shared_ptr<Edge> edge_to_erase) {
+    edges.erase(find(edges.begin(), edges.end(), edge_to_erase));
+
+
+}
+void Knot::insertNode(int index, std::shared_ptr<Node> node_crossed) {
+    nodes.insert(nodes.begin() + index, node_crossed);
+}
+
+void Knot::insertEdge(int index, std::shared_ptr<Edge> edge_crossed_1, std::shared_ptr<Edge> edge_crossed_2) {
+    edges.insert(edges.begin() + index, { edge_crossed_1, edge_crossed_2 });
+}
 void Knot::setComponentMix(float new_component_mix) {
     component_mix = new_component_mix;
 }
@@ -102,4 +122,18 @@ void Knot::drawStitched(basicgraphics::GLSLProgram& shader) {
     for (size_t i = 0; i < stitched_edges.size(); i++) {
         stitched_edges.at(i)->draw(shader);
     }
+}
+
+bool Knot::isPColorable(int p) {
+    for (int i = 0; i < p_colorability_matrix.size(); i++)
+    {
+        for (int j = 0; j < p_colorability_matrix[i].size(); j++)
+        {
+            std::cout << p_colorability_matrix[i][j];
+        }
+        std::cout << std::endl;
+    }
+
+
+    return false;
 }

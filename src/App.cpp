@@ -67,20 +67,20 @@ void App::onAnalogChange(const VRAnalogEvent &event) {
 
 }
 
-void App::onButtonDown(const VRButtonEvent &event) {
+void App::onButtonDown(const VRButtonEvent& event) {
     // This routine is called for all Button_Down events.  Check event->getName()
     // to see exactly which button has been pressed down.
-	//You can respond to individual events like this:
-	/*
+    //You can respond to individual events like this:
+    /*
     if (event.getName() == _paintOnEvent) {
         _painting = true;
     }
     else if (event.getName() == _grabOnEvent) {
         _grabbing = true;
     }
-	*/
-	string name = event.getName();
-	if (name == "MouseBtnLeft_Down") {
+    */
+    string name = event.getName();
+    if (name == "MouseBtnLeft_Down") {
 
 
         vec3 node_position_curr = vec3((mousePosX - 512.0) / 20.48, -(mousePosY - 512.0) / 20.48, 0.0);
@@ -89,6 +89,7 @@ void App::onButtonDown(const VRButtonEvent &event) {
 
                 int new_knot_count = 0;
                 for (int k = intersection_nodes.size() - 1; k >= 0; k--) {
+                    std::cout << "node" << std::endl;
                     vec2 direction_vector = normalize(vec2(knot_curr->getEdgeGuide()->getPositionCurr().x - knot_curr->getEdgeGuide()->getPositionPrev().x, knot_curr->getEdgeGuide()->getPositionCurr().y - knot_curr->getEdgeGuide()->getPositionPrev().y));
 
                     vec2 back_node_vector;
@@ -108,11 +109,13 @@ void App::onButtonDown(const VRButtonEvent &event) {
 
                         std::shared_ptr<Edge> edge1;
                         edge1.reset(new Edge(knot_curr->getNodes().at(knot_curr->getNodeCount() - 2)->getNodePosition(), knot_curr->getNodes().at(knot_curr->getNodeCount() - 1)->getNodePosition(), knot_color_index[knot_count % 3]));
+                        edge1->setArcLabel(knot_curr->getCrossingCount());
                         knot_curr->addEdge(edge1);
                         knot_curr->incEdgeCount();
+
                         edge_count_total++;
                     }
-                    
+
                     vec3 intersection_node_position = intersection_nodes.at(k)->getNodePosition();
                     std::shared_ptr<Node> intersection_node;
                     if (keyShiftDown == true) {
@@ -128,6 +131,7 @@ void App::onButtonDown(const VRButtonEvent &event) {
 
                     std::shared_ptr<Edge> edge2;
                     edge2.reset(new Edge(knot_curr->getNodes().at(knot_curr->getNodeCount() - 2)->getNodePosition(), knot_curr->getNodes().at(knot_curr->getNodeCount() - 1)->getNodePosition(), knot_color_index[knot_count % 3]));
+                    edge2->setArcLabel(knot_curr->getCrossingCount());
                     knot_curr->addEdge(edge2);
                     knot_curr->incEdgeCount();
                     edge_count_total++;
@@ -149,6 +153,7 @@ void App::onButtonDown(const VRButtonEvent &event) {
 
                         std::shared_ptr<Edge> edge3;
                         edge3.reset(new Edge(knot_curr->getNodes().at(knot_curr->getNodeCount() - 2)->getNodePosition(), knot_curr->getNodes().at(knot_curr->getNodeCount() - 1)->getNodePosition(), knot_color_index[knot_count % 3]));
+                        edge3->setArcLabel(knot_curr->getCrossingCount());
                         knot_curr->addEdge(edge3);
                         knot_curr->incEdgeCount();
                         edge_count_total++;
@@ -167,6 +172,7 @@ void App::onButtonDown(const VRButtonEvent &event) {
                     if (knot_connection_dist < KNOT_CONNECTION_DIST_MAX) {
                         std::shared_ptr<Edge> edge;
                         edge.reset(new Edge(knot_curr->getNodes().at(knot_curr->getNodeCount() - 1)->getNodePosition(), knot_curr->getNodes().at(0)->getNodePosition(), knot_color_index[knot_count % 3]));
+                        edge->setArcLabel(knot_curr->getCrossingCount());
                         knot_curr->addEdge(edge);
                         knot_curr->incEdgeCount();
                         edge_count_total++;
@@ -203,12 +209,73 @@ void App::onButtonDown(const VRButtonEvent &event) {
 
                             std::shared_ptr<Edge> edge;
                             edge.reset(new Edge(knot_curr->getNodes().at(knot_curr->getNodeCount() - 2)->getNodePosition(), node_position_curr, knot_color_index[knot_count % 3]));
+                            edge->setArcLabel(knot_curr->getCrossingCount());
                             knot_curr->addEdge(edge);
                             knot_curr->incEdgeCount();
                             edge_count_total++;
                         }
                     }
                 }
+
+
+                // OVERLAPPING EDGE DETECTION START
+                for (int k = 0; k < intersection_nodes.size(); k++) {
+
+                    int overlapping_edge = intersection_nodes.at(k)->getOverlappingEdge();
+                    if (overlapping_edge != NULL) {
+                        std::cout << "Overlapping edge: " << overlapping_edge << std::endl;
+                        std::shared_ptr<Node> node_crossed;
+                        node_crossed.reset(new Node(intersection_nodes.at(k)->getNodePosition(), 0.0f, COLOR_RED));
+
+                        std::shared_ptr<Edge> edge_crossed_1;
+                        edge_crossed_1.reset(new Edge(knot_curr->getEdges().at(overlapping_edge)->getPositionPrev(), intersection_nodes.at(k)->getNodePosition(), 0.0f, COLOR_DARK_YELLOW));
+                        edge_crossed_1->setArcLabel(knot_curr->getCrossingCount());
+
+                        std::shared_ptr<Edge> edge_crossed_2;
+                        edge_crossed_2.reset(new Edge(intersection_nodes.at(k)->getNodePosition(), knot_curr->getEdges().at(overlapping_edge)->getPositionCurr(), 0.0f, COLOR_GREEN));
+                        edge_crossed_2->setArcLabel(knot_curr->getCrossingCount());
+
+                        knot_curr->insertNode(overlapping_edge, node_crossed);
+                        knot_curr->incNodeCount();
+                        node_count_total++;
+
+                        knot_curr->eraseEdge(knot_curr->getEdges().at(overlapping_edge));
+                        knot_curr->insertEdge(overlapping_edge, edge_crossed_1, edge_crossed_2);
+
+                        knot_curr->incEdgeCount();
+                        edge_count_total++;
+
+
+                        for (int l = 0; l < intersection_nodes.size(); l++) {
+                            if (intersection_nodes.at(l)->getOverlappingEdge() > overlapping_edge) {
+                                intersection_nodes.at(l)->setOverlappingEdge(intersection_nodes.at(l)->getOverlappingEdge() + 1);
+                            }
+                        }
+                    }
+
+
+                    //knot_curr->incCrossingCount();
+                    //crossing_count_total++;
+                    if (intersection_nodes.at(k)->getColor() == glm::vec3(1.0 / 3.0, 1.0, 1.0 / 3.0)) { // IF GREEN
+                        std::cout << "GREEN" << std::endl;
+                        //knot_curr->getEdges().at(knot_curr->getEdgeCount() - 2)->setArcLabel(knot_curr->getEdges().at(knot_curr->getEdgeCount() - 2)->getArcLabel() + 1);
+                        knot_curr->incCrossingCount();
+                        crossing_count_total++;
+
+                    }
+                    else if (intersection_nodes.at(k)->getColor() == glm::vec3(1.0, 1.0, 1.0 / 3.0)) { // IF YELLOW
+                        std::cout << "YELLOW" << std::endl;
+                        std::cout << "edge overlap: " << overlapping_edge << std::endl;
+                        for (int m = overlapping_edge + 1; m < knot_curr->getEdgeCount(); m++) {
+                            std::cout << "increased" << std::endl;
+                            knot_curr->getEdges().at(m)->setArcLabel(knot_curr->getEdges().at(m)->getArcLabel() + 1);
+                        }
+                        knot_curr->incCrossingCount();
+                        crossing_count_total++;
+                    }
+                }
+                // END OVERLAPPING EDGE DETECTION
+
             }
         }
         mouseDown = true;
@@ -280,7 +347,7 @@ void App::onButtonDown(const VRButtonEvent &event) {
         else {
             isDebugEnabled = true;
         }
-    } 
+    }
     else if (name == "KbdF4_Down") {
         currTheta = glm::radians(90.0);
         currPhi = glm::radians(90.0);
@@ -319,6 +386,30 @@ void App::onButtonDown(const VRButtonEvent &event) {
         canKnotBeConnected = false;
         keyShiftDown = false;
 
+    }
+    else if (name == "KbdF5_Down") {
+        for (int i = 0; i < knot_curr->getEdgeCount(); i++) {
+            if (knot_curr->getEdges().at(i)->getArcLabel() == 0) {
+                knot_curr->getEdges().at(i)->setColor(COLOR_RED);
+            } else if (knot_curr->getEdges().at(i)->getArcLabel() == 1) {
+                knot_curr->getEdges().at(i)->setColor(COLOR_DARK_YELLOW);
+            }
+            else if (knot_curr->getEdges().at(i)->getArcLabel() == 2) {
+                knot_curr->getEdges().at(i)->setColor(COLOR_BLUE);
+            }
+            else if (knot_curr->getEdges().at(i)->getArcLabel() == 3) {
+                knot_curr->getEdges().at(i)->setColor(COLOR_MAGENTA);
+            } 
+            else if (knot_curr->getEdges().at(i)->getArcLabel() == 4) {
+                knot_curr->getEdges().at(i)->setColor(COLOR_LIGHT_BLUE);
+            }
+            else if (knot_curr->getEdges().at(i)->getArcLabel() == 5) {
+                knot_curr->getEdges().at(i)->setColor(COLOR_GREEN);
+            }
+            else {
+                knot_curr->getEdges().at(i)->setColor(COLOR_WHITE);
+            }
+        }
     }
 }
 
@@ -822,12 +913,17 @@ if (knot_guide_mesh != NULL) {
         drawText(theta_text, 0, (16 * 9), windowHeight, windowWidth);
         std::string phi_text = "phi:";
         drawText(phi_text, 0, (16 * 10), windowHeight, windowWidth);
-        std::string node_count_text = "node_count:";
-        drawText(node_count_text, 0, (16 * 12), windowHeight, windowWidth);
-        std::string edge_count_text = "edge_count:";
-        drawText(edge_count_text, 0, (16 * 13), windowHeight, windowWidth);
-        std::string knot_count_text = "knot_count:";
-        drawText(knot_count_text, 0, (16 * 14), windowHeight, windowWidth);
+        std::string knot_count_text = "knot:";
+        drawText(knot_count_text, 0, (16 * 12), windowHeight, windowWidth);
+        std::string node_count_text = "nodes:";
+        drawText(node_count_text, 0, (16 * 13), windowHeight, windowWidth);
+        std::string edge_count_text = "edges:";
+        drawText(edge_count_text, 0, (16 * 14), windowHeight, windowWidth);
+        std::string crossing_count_text = "crossings:";
+        drawText(crossing_count_text, 0, (16 * 15), windowHeight, windowWidth);
+        std::string colorability_text = "is_p_colorable:";
+        drawText(colorability_text, 0, (16 * 17), windowHeight, windowWidth);
+
 
         fonsSetColor(fs, glfonsRGBA(255, 255, 0, 255));
         fonsSetAlign(fs, FONS_ALIGN_RIGHT | FONS_ALIGN_TOP);
@@ -872,12 +968,16 @@ if (knot_guide_mesh != NULL) {
         std::string phi_text_2 = "         " + std::to_string(glm::degrees(currPhi));
         drawText(phi_text_2, 0, (16 * 10), windowHeight, windowWidth);
 
-        std::string node_count_text_2 = "            " + std::to_string(node_count_total);
-        drawText(node_count_text_2, 0, (16 * 12), windowHeight, windowWidth);
-        std::string edge_count_text_2 = "            " + std::to_string(edge_count_total);
-        drawText(edge_count_text_2, 0, (16 * 13), windowHeight, windowWidth);
-        std::string knot_count_text_2 = "            " + std::to_string(knot_count);
-        drawText(knot_count_text_2, 0, (16 * 14), windowHeight, windowWidth);
+        std::string knot_count_text_2 = "           " + std::to_string(knot_count);
+        drawText(knot_count_text_2, 0, (16 * 12), windowHeight, windowWidth);
+        std::string node_count_text_2 = "           " + std::to_string(knot_curr->getNodeCount()) + " / " + std::to_string(node_count_total);
+        drawText(node_count_text_2, 0, (16 * 13), windowHeight, windowWidth);
+        std::string edge_count_text_2 = "           " + std::to_string(knot_curr->getEdgeCount()) + " / " + std::to_string(edge_count_total);
+        drawText(edge_count_text_2, 0, (16 * 14), windowHeight, windowWidth);
+        std::string crossing_count_text_2 = "           " + std::to_string(knot_curr->getCrossingCount()) + " / " + std::to_string(crossing_count_total);
+        drawText(crossing_count_text_2, 0, (16 * 15), windowHeight, windowWidth);
+        std::string colorability_text_2 = "                NULL";
+        drawText(colorability_text_2, 0, (16 * 17), windowHeight, windowWidth);
     }
 }
 
@@ -1194,8 +1294,13 @@ void App::calcEdgeIntersection() {
                         node.reset(new Node(vec3(i_x, i_y, 0.0f), KNOT_SPACING_DIST_MIN + 5.0f, COLOR_LIGHT_GREEN)); //FIRST NODE
                     }
                     else {
-                        node.reset(new Node(vec3(i_x, i_y, 0.0f), KNOT_SPACING_DIST_MIN + 5.0f, COLOR_YELLOW)); //FIRST NODE}
+                        node.reset(new Node(vec3(i_x, i_y, 0.0f), KNOT_SPACING_DIST_MIN + 5.0f, COLOR_YELLOW)); //FIRST NODE
+                        node->setOverlappingEdge(j);
+                        //std::cout << "Overlapping edge set to " << j << std::endl;
                     }
+
+
+
 
                     // test for distances
                     float new_distFromGuidePrev = length(vec3(knot_curr->getEdgeGuide()->getPositionPrev().x - i_x, knot_curr->getEdgeGuide()->getPositionPrev().y - i_y, 0.0f));
@@ -1209,17 +1314,7 @@ void App::calcEdgeIntersection() {
                         }
                     }
 
-                    std::vector<std::shared_ptr<Node>> intersection_nodes_temp;
-                    for (int i = 0; i < index; i++) {
-                        intersection_nodes_temp.push_back(intersection_nodes.at(i));
-                    }
-                    intersection_nodes_temp.push_back(node);
-                    for (int i = index; i < intersection_nodes.size(); i++) {
-                        intersection_nodes_temp.push_back(intersection_nodes.at(i));
-                    }
-                    intersection_nodes = intersection_nodes_temp;
-
-
+                    intersection_nodes.insert(intersection_nodes.begin() + index, node);
                 }
             }
         }
@@ -1253,5 +1348,12 @@ void App::drawFancyKnots() {
             stitched_edge.reset(new Edge(vert0, vert1, vert2, vert3, knot_color_index[i % 3]));
             knot_curr->addStitchedEdge(stitched_edge);
         }
+    }
+}
+
+void App::calculatePColorability() {
+    std::cout << "Calculating is p-colorable..." << std::endl;
+    for (size_t i = 0; i < knots.size(); i++) {
+        knots.at(i)->isPColorable(3);
     }
 }
