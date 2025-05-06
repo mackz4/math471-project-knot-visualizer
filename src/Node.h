@@ -22,7 +22,7 @@ public:
 
 
 private:
-    const float NODE_RADIUS = 0.6f; //0.6
+    const float NODE_RADIUS = 1.2f; //0.6
     const int NODE_STACKS = 20;
     const int NODE_SLICES = 40;
 

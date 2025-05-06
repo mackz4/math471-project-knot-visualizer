@@ -93,9 +93,9 @@ private:
     float currTheta;
     float currPhi;
     glm::vec3 angleToSpherePoint(float theta, float phi);
-    void addGeometryEdge();
-    void addGeometryGuide(vec3 knot_vertex_prev, vec3 knot_vertex_curr, float knot_vertex_distance);
-    void updateLastEdge(float vert_displacement_y);
+    //void addGeometryEdge();
+    //void addGeometryGuide(vec3 knot_vertex_prev, vec3 knot_vertex_curr, float knot_vertex_distance);
+    //void updateLastEdge(float vert_displacement_y);
 
     glm::vec2 lastMousePos;
     glm::vec3 eye_world;
@@ -134,17 +134,18 @@ private:
 
 
 
-    // 4/25, 4/26 - 5/1
-    const float KNOT_SPACING_DIST_MIN = 2.0f; //2.0
+    // // // // // //
+    const float KNOT_SPACING_DIST_MIN = 4.0f; //2.0
     const float KNOT_CONNECTION_DIST_MAX = 1.0f;
 
     std::vector<std::shared_ptr<Knot>> knots;
     std::shared_ptr<Knot> knot_curr;
-    const glm::vec3 knot_color_index[3] = {COLOR_BLUE, COLOR_MAGENTA, COLOR_CYAN};
-    const glm::vec3 knot_color_index_2[3] = {COLOR_LIGHT_BLUE, COLOR_LIGHT_MAGENTA, COLOR_LIGHT_CYAN};
+    const glm::vec3 knot_color_index[3] = {COLOR_CYAN, COLOR_MAGENTA, COLOR_CYAN};
+    const glm::vec3 knot_color_index_2[3] = {COLOR_LIGHT_CYAN, COLOR_LIGHT_MAGENTA, COLOR_LIGHT_CYAN};
     glm::vec3 node_cursor_position;
     int knot_count = 0;
-    int node_total_count = 0;
+    int node_count_total = 0;
+    int edge_count_total = 0;
     int visualizer_mode = 0;
     bool isShadersEnabled = true;
     bool isDebugEnabled = true;

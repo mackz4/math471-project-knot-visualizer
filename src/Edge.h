@@ -22,7 +22,7 @@ public:
     void draw(basicgraphics::GLSLProgram& shader);
 
 private:
-    const float EDGE_RADIUS = 0.6f; //0.6
+    const float EDGE_RADIUS = 1.2f; //0.6
     const int N_EDGE_SIDES = 40;
 
     glm::vec3 position_prev;
