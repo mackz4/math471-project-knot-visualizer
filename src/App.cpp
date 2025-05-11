@@ -228,11 +228,11 @@ void App::onButtonDown(const VRButtonEvent& event) {
                         node_crossed.reset(new Node(intersection_nodes.at(k)->getNodePosition(), 0.0f, COLOR_RED));
 
                         std::shared_ptr<Edge> edge_crossed_1;
-                        edge_crossed_1.reset(new Edge(knot_curr->getEdges().at(overlapping_edge)->getPositionPrev(), intersection_nodes.at(k)->getNodePosition(), 0.0f, COLOR_DARK_YELLOW));
+                        edge_crossed_1.reset(new Edge(knot_curr->getEdges().at(overlapping_edge)->getPositionPrev(), intersection_nodes.at(k)->getNodePosition(), 0.0f, knot_color_index[knot_count % 3]));
                         edge_crossed_1->setArcLabel(knot_curr->getCrossingCount());
 
                         std::shared_ptr<Edge> edge_crossed_2;
-                        edge_crossed_2.reset(new Edge(intersection_nodes.at(k)->getNodePosition(), knot_curr->getEdges().at(overlapping_edge)->getPositionCurr(), 0.0f, COLOR_GREEN));
+                        edge_crossed_2.reset(new Edge(intersection_nodes.at(k)->getNodePosition(), knot_curr->getEdges().at(overlapping_edge)->getPositionCurr(), 0.0f, knot_color_index[knot_count % 3]));
                         edge_crossed_2->setArcLabel(knot_curr->getCrossingCount());
 
                         knot_curr->insertNode(overlapping_edge, node_crossed);
