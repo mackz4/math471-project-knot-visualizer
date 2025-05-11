@@ -1,4 +1,9 @@
+# Knot Visualizer using OpenGL
+
 A knot visualizer developed for MATH471 at Macalester College.
+
+## Running the Project:
+This project uses `basicgraphics`. Generate files with CMake. Open the project in your editor of choice, build and run.
 
 ## Controls
 **MOUSE1**: Click to place a knot node. Optionally, you can click and drag your mouse and nodes will be placed automatically.
